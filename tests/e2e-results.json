@@ -1,0 +1,207 @@
+[
+  {
+    "name": "offline: loads with zero external requests (CDN/fonts blocked)",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "no uncaught JS errors on load",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "demo: DEMO DATA badge, demo link text, 2 flagged zones from simulated nodes",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "nav: all four tabs open and show their heading",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "demo: analytics chart, KPIs and node picker work (select N4)",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "demo: \"Simulate link cut\" button reroutes N4 and raises a link alert",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "alerts: acknowledge toggles and updates open count",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "log: category filters work and CSV export downloads with DEMO label",
+    "pass": true,
+    "detail": "csi-log-DEMO-20261124-113359.csv"
+  },
+  {
+    "name": "dashboard: \"Generate report\" exports DEMO-labelled JSON",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "back button handler: non-dashboard tab -> dashboard, then not handled",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "hardware mode (not connected): HARDWARE badge, no demo values, NOT CONNECTED banner",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "invalid gateway addresses show errors and do not connect",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "unreachable gateway: shows reconnecting with attempt counter, error and retry timer",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "connects automatically once the gateway comes up (no manual action)",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "hardware dashboard shows received data with timestamps, labelled as estimates",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "mock gateway values (not demo values) are what is displayed",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "malformed / empty / wrong-version frames are counted and do not break the UI",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "hardware alerts derive from real frames (N2 PRIORITY, N3 weak signal) and notify native bridge",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "STALE: frames stop -> DATA STALE banner, last values kept, node alerts, never demo data",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "CONNECTION LOSS: gateway dies -> LINK LOST banner, then auto-recovers when it returns",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "manual Disconnect stops reconnecting",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "switching Hardware -> Demo -> Hardware keeps datasets separate",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "settings persist across reload (mode + gateway address)",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "TEST CONNECTION: reachable gateway -> \"reachable and sending valid data\"; live link and counters untouched",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "TEST CONNECTION: invalid address, refused port, silent gateway, junk gateway",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "CONNECT: last successful connection, message count and last-message time are shown and update",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "ANALYTICS: N1..N4 each show their own measurements, chart and latest-sample timestamp",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "CHART FREEZES when data stops (does not move), shows Paused + last sample time, resumes with data",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "EMPTY CHART STATES: not connected / waiting for first measurement / hardware never plots demo",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "EXPLANATIONS: CSI variance and estimator output toggles",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "RECONNECT: gateway reconnect after earlier disconnect; saved address is used",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "ALERTS: severity (Info/Warning/Critical) + category chips distinguish detection, mesh and gateway events",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "LOG: every row has time + severity + category; severity and category filters work",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "CSV EXPORT: valid downloadable file (name, type, header, quoting, dates) - verified by Python csv module",
+    "pass": true,
+    "detail": "48 valid rows"
+  },
+  {
+    "name": "GATEWAY LOSS UI: Critical Gateway alert, Retry now, What to check, connection events; clears on recovery",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "PERSISTENCE: reload and full \"app restart\" (new page, same storage) restore settings and auto-reconnect",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "SEPARATION: Demo Mode has no gateway form/Test button; demo log/alerts contain only DEMO-sourced entries; hardware data untouched",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "layout: no horizontal overflow on 4 tabs x 7 sizes x 2 modes",
+    "pass": true,
+    "detail": "56 combinations"
+  },
+  {
+    "name": "rotation: portrait <-> landscape re-flows without errors or state loss",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "no uncaught JS errors during the whole run",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "no external network requests during the whole run",
+    "pass": true,
+    "detail": ""
+  }
+]

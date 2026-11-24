@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ESP32 gateways on a local Wi-Fi network speak plain ws:// (no TLS, no public host name).
+     Cleartext is therefore permitted; MainActivity blocks every non-local web request and
+     csi-protocol.js only accepts private/local gateway addresses. -->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true" />
+</network-security-config>

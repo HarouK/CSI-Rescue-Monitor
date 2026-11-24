@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0f14">
+<title>CSI Rescue Monitor</title>
+<script src="assets/dc-runtime.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>/* latin */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("assets/inter-a.woff2") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* latin */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("assets/inter-a.woff2") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* latin */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("assets/inter-a.woff2") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* latin */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("assets/inter-a.woff2") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* latin */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("assets/inter-b.woff2") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* latin */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("assets/inter-b.woff2") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* latin */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("assets/inter-b.woff2") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+</style>
+<style>
+body{margin:0;background:#0a1017}
+button{font-family:inherit}
+button:focus-visible{outline:2px solid #25e0a1;outline-offset:2px}
+</style>
+</helmet>
+<div style="background:#0a1017;color:#e6eef6;font-family:'Inter',system-ui,sans-serif;min-height:100vh;box-sizing:border-box;padding:20px;display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start">
+
+<!-- Sidebar -->
+<nav aria-label="Main" style="flex:0 0 200px;min-width:0;background:#101922;border:1px solid #1e2d3b;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:6px;box-sizing:border-box">
+<div style="display:flex;flex-direction:column;gap:2px;padding:4px 6px 16px">
+<span style="font-size:16px;font-weight:700;letter-spacing:-0.01em">CSI Rescue Monitor</span>
+<span style="font-size:12px;color:#93a8bb">ESP32-S3 mesh</span>
+</div>
+<sc-for list="{{navs}}" as="n" hint-placeholder-count="3">
+<button sc-camel-on-click="{{n.pick}}" aria-pressed="{{n.pressed}}" style="cursor:pointer;text-align:left;background:{{n.bg}};color:{{n.fg}};border:1px solid {{n.border}};border-radius:8px;padding:11px 14px;min-height:44px;font-size:14px;font-weight:600">{{n.label}}</button>
+</sc-for>
+</nav>
+
+<!-- Main -->
+<div style="flex:1 1 680px;min-width:0;display:flex;flex-direction:column;gap:18px">
+
+<div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between">
+<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+<h1 style="margin:0;font-size:22px;font-weight:700;letter-spacing:-0.01em">{{pageTitle}}</h1>
+<span style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;letter-spacing:0.08em;color:#ffb454;border:1px solid #ffb454;border-radius:4px;padding:3px 8px">DEMO DATA</span>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:13px;color:#c4d2df">
+<span style="display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;border-radius:50%;background:{{accent}}"></span>System online</span>
+<span style="font-family:'JetBrains Mono',monospace;color:#93a8bb">Sat 14 Nov 2026</span>
+<span style="font-family:'JetBrains Mono',monospace;background:#101922;border:1px solid #1e2d3b;border-radius:999px;padding:6px 12px">Router on power bank · 11 h</span>
+</div>
+</div>
+
+<!-- ============ DASHBOARD ============ -->
+<sc-if value="{{isDash}}" hint-placeholder-val="{{true}}">
+<div style="display:flex;flex-direction:column;gap:18px">
+
+<div style="display:flex;flex-wrap:wrap;gap:18px;align-items:stretch">
+
+<div style="flex:2 1 540px;min-width:0;background:#101922;border:1px solid #1e2d3b;border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px">
+<div style="display:flex;flex-direction:column;gap:3px">
+<h2 style="margin:0;font-size:16px;font-weight:600">Live through-wall view</h2>
+<span style="font-size:13px;color:#93a8bb">Estimated presence signal from CSI · not a reconstruction of a person</span>
+</div>
+<span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#93a8bb">Real-time · 4 nodes</span>
+</div>
+<div style="display:flex;gap:12px;align-items:stretch">
+<svg sc-camel-view-box="0 0 760 440" role="img" aria-label="Three-dimensional style view of the search room behind a wall. Two glowing presence zones are marked: Zone B at 87 percent and Zone D at 71 percent confidence." style="flex:1 1 auto;min-width:0;width:100%;height:auto;display:block;background:#0b121a;border-radius:10px">
+<defs>
+<radialGradient id="glowB" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="{{accent}}" stop-opacity="0.95"></stop><stop offset="45%" stop-color="{{accent}}" stop-opacity="0.35"></stop><stop offset="100%" stop-color="{{accent}}" stop-opacity="0"></stop></radialGradient>
+</defs>
+<polygon points="190,60 700,60 700,230 190,230" fill="#111b25" stroke="#3b4f61" stroke-width="1.5"></polygon>
+<polygon points="110,210 190,60 190,230 110,400" fill="#0f1822" stroke="#3b4f61" stroke-width="1.5"></polygon>
+<polygon points="110,400 190,230 700,230 650,400" fill="#0d151e" stroke="#3b4f61" stroke-width="1.5"></polygon>
+<g stroke="#1e2d3b" stroke-width="1">
+<line x1="170" y1="272" x2="688" y2="272"></line>
+<line x1="150" y1="315" x2="675" y2="315"></line>
+<line x1="130" y1="357" x2="662" y2="357"></line>
+<line x1="292" y1="230" x2="218" y2="400"></line>
+<line x1="395" y1="230" x2="326" y2="400"></line>
+<line x1="497" y1="230" x2="434" y2="400"></line>
+<line x1="600" y1="230" x2="542" y2="400"></line>
+</g>
+<rect x="600" y="85" width="86" height="140" fill="none" stroke="#4a6076" stroke-width="1.5"></rect>
+<line x1="600" y1="132" x2="686" y2="132" stroke="#4a6076"></line>
+<line x1="600" y1="178" x2="686" y2="178" stroke="#4a6076"></line>
+<polygon points="330,255 450,255 462,285 316,285" fill="#16222e" stroke="#4a6076" stroke-width="1.5"></polygon>
+<polygon points="330,285 336,330 342,330 340,285" fill="#4a6076"></polygon>
+<polygon points="440,285 446,330 452,330 458,285" fill="#4a6076"></polygon>
+<polygon points="140,320 200,300 215,335 150,360" fill="#16222e" stroke="#4a6076" stroke-width="1.5"></polygon>
+<ellipse cx="270" cy="300" rx="70" ry="55" fill="url(#glowB)"></ellipse>
+<ellipse cx="545" cy="318" rx="62" ry="48" fill="url(#glowB)" opacity="0.7"></ellipse>
+<rect x="222" y="240" width="96" height="120" rx="3" fill="none" stroke="{{accent}}" stroke-width="1.5" stroke-dasharray="5 4"></rect>
+<rect x="222" y="218" width="96" height="22" rx="3" fill="#0a1017" stroke="{{accent}}" stroke-width="1"></rect>
+<text x="270" y="233" text-anchor="middle" fill="#e6eef6" font-size="12" font-weight="600" font-family="JetBrains Mono, monospace">Zone B 87%</text>
+<rect x="500" y="262" width="90" height="112" rx="3" fill="none" stroke="{{accent}}" stroke-width="1.5" stroke-dasharray="5 4"></rect>
+<rect x="500" y="240" width="90" height="22" rx="3" fill="#0a1017" stroke="{{accent}}" stroke-width="1"></rect>
+<text x="545" y="255" text-anchor="middle" fill="#e6eef6" font-size="12" font-weight="600" font-family="JetBrains Mono, monospace">Zone D 71%</text>
+<text x="136" y="108" fill="#93a8bb" font-size="12" font-family="JetBrains Mono, monospace">wall / debris</text>
+<g stroke-width="2.5" fill="none">
+<line x1="60" y1="395" x2="60" y2="345" stroke="#7cb8ff"></line>
+<line x1="60" y1="395" x2="110" y2="395" stroke="#25e0a1"></line>
+</g>
+<text x="52" y="340" fill="#93a8bb" font-size="11" font-family="JetBrains Mono, monospace">Z</text>
+<text x="114" y="399" fill="#93a8bb" font-size="11" font-family="JetBrains Mono, monospace">X</text>
+</svg>
+<div style="flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:12px;color:#93a8bb">
+<span>High</span>
+<span style="display:block;width:12px;flex:1 1 auto;min-height:120px;border-radius:6px;background:linear-gradient(180deg,#25e0a1,#0b121a);border:1px solid #1e2d3b"></span>
+<span>Low</span>
+</div>
+</div>
+</div>
+
+<div style="flex:1 1 300px;min-width:0;display:flex;flex-direction:column;gap:18px">
+<div style="background:#101922;border:1px solid #1e2d3b;border-radius:14px;padding:18px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center">
+<h2 style="margin:0;font-size:16px;font-weight:600">Occupied zones</h2>
+<div style="font-family:'JetBrains Mono',monospace;font-size:64px;font-weight:600;line-height:1.1;color:{{accent}}">{{occCount}}</div>
+<div style="font-size:14px;color:#c4d2df">Zone B, Zone D</div>
+<div style="font-size:13px;color:#93a8bb">Signs of life, not confirmed survival</div>
+</div>
+<div style="flex:1 1 auto;background:#101922;border:1px solid #1e2d3b;border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:6px">
+<h2 style="margin:0 0 6px;font-size:16px;font-weight:600">Mesh node status</h2>
+<sc-for list="{{meshNodes}}" as="m" hint-placeholder-count="4">
+<button sc-camel-on-click="{{m.pick}}" aria-label="{{m.aria}}" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px;background:transparent;color:#e6eef6;border:0;border-top:1px solid #1e2d3b;padding:10px 4px;min-height:44px;font-size:14px;text-align:left">
+<span style="font-weight:600;flex:0 0 70px">{{m.name}}</span>
+<span style="display:flex;align-items:center;gap:8px;flex:1 1 auto;color:#c4d2df"><span style="width:8px;height:8px;border-radius:50%;background:{{accent}}"></span>Online</span>
+<span style="display:flex;align-items:flex-end;gap:3px;height:18px">
+<sc-for list="{{m.bars}}" as="b" hint-placeholder-count="4"><span style="display:block;width:4px;height:{{b.h}};border-radius:1px;background:{{b.bg}}"></span></sc-for>
+</span>
+</button>
+</sc-for>
+</div>
+</div>
+</div>
+
+<div style="display:flex;flex-wrap:wrap;gap:18px;align-items:stretch">
+
+<div style="flex:1 1 400px;min-width:0;background:#101922;border:1px solid #1e2d3b;border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:12px">
+<h2 style="margin:0;font-size:16px;font-weight:600">Top view (2D projection)</h2>
+<svg sc-camel-view-box="0 0 400 250" role="img" aria-label="Top-down plan of the room with four mesh nodes in the corners and two dashed presence zones, Zone B at the top left and Zone D at the bottom right" style="width:100%;height:auto;display:block;background:#0b121a;border-radius:10px">
+<rect x="30" y="20" width="340" height="210" fill="#0d151e" stroke="#4a6076" stroke-width="3"></rect>
+<g stroke="#162330" stroke-width="1">
+<line x1="30" y1="62" x2="370" y2="62"></line><line x1="30" y1="104" x2="370" y2="104"></line><line x1="30" y1="146" x2="370" y2="146"></line><line x1="30" y1="188" x2="370" y2="188"></line>
+<line x1="98" y1="20" x2="98" y2="230"></line><line x1="166" y1="20" x2="166" y2="230"></line><line x1="234" y1="20" x2="234" y2="230"></line><line x1="302" y1="20" x2="302" y2="230"></line>
+</g>
+<rect x="318" y="96" width="40" height="70" rx="3" fill="#16222e" stroke="#4a6076"></rect>
+<rect x="150" y="30" width="80" height="22" rx="3" fill="#16222e" stroke="#4a6076"></rect>
+<ellipse cx="120" cy="88" rx="44" ry="34" fill="url(#glowB)"></ellipse>
+<ellipse cx="280" cy="170" rx="40" ry="30" fill="url(#glowB)" opacity="0.7"></ellipse>
+<rect x="88" y="62" width="64" height="52" rx="3" fill="none" stroke="{{accent}}" stroke-width="1.5" stroke-dasharray="5 4"></rect>
+<text x="120" y="56" text-anchor="middle" fill="#e6eef6" font-size="11" font-weight="600" font-family="JetBrains Mono, monospace">Zone B</text>
+<rect x="250" y="146" width="60" height="48" rx="3" fill="none" stroke="{{accent}}" stroke-width="1.5" stroke-dasharray="5 4"></rect>
+<text x="280" y="140" text-anchor="middle" fill="#e6eef6" font-size="11" font-weight="600" font-family="JetBrains Mono, monospace">Zone D</text>
+<g fill="#0b121a" stroke="{{accent}}" stroke-width="2.5">
+<circle cx="44" cy="34" r="9"></circle><circle cx="356" cy="34" r="9"></circle><circle cx="44" cy="216" r="9"></circle><circle cx="356" cy="216" r="9"></circle>
+</g>
+<g fill="#c4d2df" font-size="10" font-weight="600" font-family="JetBrains Mono, monospace">
+<text x="58" y="38">N2</text><text x="326" y="38">N3</text><text x="58" y="220">N1</text><text x="326" y="220">N4</text>
+</g>
+</svg>
+<div style="display:flex;flex-wrap:wrap;gap:16px;font-size:12px;color:#93a8bb">
+<span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;border:2px solid {{accent}}"></span>ESP32 node</span>
+<span style="display:flex;align-items:center;gap:6px"><span style="width:14px;height:10px;border:1.5px dashed {{accent}}"></span>Presence zone</span>
+<span style="display:flex;align-items:center;gap:6px"><span style="width:14px;height:10px;background:#16222e;border:1px solid #4a6076"></span>Wall / obstacle</span>
+</div>
+</div>
+
+<div style="flex:1 1 400px;min-width:0;background:#101922;border:1px solid #1e2d3b;border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:12px">
+<h2 style="margin:0;font-size:16px;font-weight:600">CSI heatmap (top view)</h2>
+<div style="display:flex;gap:12px;align-items:stretch">
+<div role="img" aria-label="Heatmap of CSI signal change across the room. Red and yellow areas near Zone B at the top left and Zone D at the bottom right show the strongest presence signal." style="flex:1 1 auto;min-width:0;border:3px solid #4a6076;border-radius:4px;overflow:hidden;background:#06103a">
+<div style="display:grid;grid-template-columns:repeat(24,minmax(0,1fr));gap:0;filter:blur(3px);transform:scale(1.08)">
+<sc-for list="{{heat}}" as="c" hint-placeholder-count="288">
+<div style="aspect-ratio:1/1;background:{{c.bg}}"></div>
+</sc-for>
+</div>
+</div>
+<div style="flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:12px;color:#93a8bb">
+<span>High</span>
+<span style="display:block;width:12px;flex:1 1 auto;min-height:100px;border-radius:6px;background:linear-gradient(180deg,#ff2a1a,#ffd21a,#27e07a,#1a7dff,#0a1a8a);border:1px solid #1e2d3b"></span>
+<span>Low</span>
+</div>
+</div>
+</div>
+</div>
+
+<div style="display:flex;flex-wrap:wrap;gap:14px;align-items:stretch">
+<sc-for list="{{tiles}}" as="t" hint-placeholder-count="4">
+<div style="flex:1 1 170px;min-width:0;background:#101922;border:1px solid #1e2d3b;border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:4px">
+<span style="font-size:12px;color:#93a8bb;font-weight:600">{{t.label}}</span>
+<span style="font-family:'JetBrains Mono',monospace;font-size:28px;font-weight:600">{{t.value}}</span>
+<span style="font-size:12px;color:#93a8bb">{{t.sub}}</span>
+</div>
+</sc-for>
+<div style="flex:1 1 240px;min-width:0;display:flex;flex-direction:column;gap:8px;justify-content:center">
+<button sc-camel-on-click="{{makeReport}}" style="cursor:pointer;background:{{accent}};color:#0a1017;border:0;border-radius:10px;padding:14px 20px;min-height:48px;font-size:15px;font-weight:700">Generate report</button>
+<span style="font-size:12px;color:#93a8bb;min-height:16px">{{reportNote}}</span>
+</div>
+</div>
+
+</div>
+</sc-if>
+
+<!-- ============ ANALYTICS ============ -->
+<sc-if value="{{isAna}}" hint-placeholder-val="{{false}}">
+<div style="display:flex;flex-direction:column;gap:18px">
+
+<div style="display:flex;flex-wrap:wrap;gap:14px">
+<sc-for list="{{kpis}}" as="k" hint-placeholder-count="5">
+<div style="flex:1 1 180px;min-width:0;background:#101922;border:1px solid #1e2d3b;border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:6px">
+<div style="font-size:12px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:#93a8bb">{{k.label}}</div>
+<div style="font-family:'JetBrains Mono',monospace;font-size:26px;font-weight:600;color:{{k.color}}">{{k.value}}</div>
+<div style="font-size:13px;color:#93a8bb">{{k.sub}}</div>
+</div>
+</sc-for>
+</div>
+
+<div style="display:flex;flex-wrap:wrap;gap:18px;align-items:stretch">
+<div style="flex:1.5 1 480px;min-width:0;background:#101922;border:1px solid #1e2d3b;border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px">
+<h2 style="margin:0;font-size:16px;font-weight:600">CSI variance · {{selId}}</h2>
+<span style="font-size:13px;color:#93a8bb">{{selZone}}</span>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:8px">
+<sc-for list="{{nodePicks}}" as="p" hint-placeholder-count="4">
+<button sc-camel-on-click="{{p.pick}}" aria-pressed="{{p.pressed}}" style="cursor:pointer;background:{{p.bg}};color:{{p.fg}};border:1px solid {{p.border}};border-radius:6px;padding:8px 14px;min-height:44px;font-size:13px;font-weight:600;font-family:'JetBrains Mono',monospace">{{p.label}}</button>
+</sc-for>
+</div>
+<svg sc-camel-view-box="0 0 600 180" role="img" aria-label="CSI amplitude variance over the last 60 seconds for the selected node, with detection threshold line" style="width:100%;height:auto;display:block;background:#0b121a;border-radius:8px">
+<line x1="30" y1="150" x2="590" y2="150" stroke="#1e2d3b" stroke-width="1"></line>
+<line x1="30" y1="85" x2="590" y2="85" stroke="#162330" stroke-width="1"></line>
+<line x1="30" y1="20" x2="590" y2="20" stroke="#162330" stroke-width="1"></line>
+<line x1="30" y1="104" x2="590" y2="104" stroke="#ffb454" stroke-width="1.5" stroke-dasharray="6 5"></line>
+<text x="36" y="99" fill="#ffb454" font-size="11" font-family="JetBrains Mono, monospace">detection threshold</text>
+<polyline points="{{chartPoints}}" fill="none" stroke="{{accent}}" stroke-width="2" stroke-linejoin="round" transform="translate(30 0)"></polyline>
+<text x="30" y="172" fill="#93a8bb" font-size="11" font-family="JetBrains Mono, monospace">-60 s</text>
+<text x="560" y="172" fill="#93a8bb" font-size="11" font-family="JetBrains Mono, monospace">now</text>
+</svg>
+<div style="font-size:13px;color:#93a8bb;line-height:1.5">Occupied zones show a slow ripple in the breathing band (about 0.2–0.5 Hz) above the empty-room baseline; clear zones stay flat below the threshold.</div>
+</div>
+
+<div style="flex:1 1 300px;min-width:0;background:#101922;border:1px solid #1e2d3b;border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:12px">
+<h2 style="margin:0;font-size:16px;font-weight:600">Classifier output</h2>
+<div style="background:#152230;border:1px solid #1e2d3b;border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:6px">
+<div style="font-size:12px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:#93a8bb">Decision · {{selId}}</div>
+<div style="font-family:'JetBrains Mono',monospace;font-size:26px;font-weight:600;color:{{selColor}}">{{selStatus}}</div>
+<div style="font-size:13px;color:#93a8bb">Confidence {{selConf}} · behind {{selMat}}</div>
+</div>
+<div style="display:flex;flex-direction:column">
+<sc-for list="{{feats}}" as="f" hint-placeholder-count="4">
+<div style="display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid #1e2d3b;font-size:13px"><span style="color:#c4d2df">{{f.k}}</span><span style="font-family:'JetBrains Mono',monospace">{{f.v}}</span></div>
+</sc-for>
+</div>
+</div>
+</div>
+
+<div style="display:flex;flex-wrap:wrap;gap:18px;align-items:stretch">
+<div style="flex:1.2 1 460px;min-width:0;background:#101922;border:1px solid #1e2d3b;border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px">
+<h2 style="margin:0;font-size:16px;font-weight:600">Detection performance by obstruction</h2>
+<span style="font-size:13px;color:#93a8bb">Sample values for layout only</span>
+</div>
+<div style="overflow-x:auto">
+<sc-raw-table style="width:100%;border-collapse:collapse;font-size:14px;min-width:420px">
+<sc-raw-thead>
+<sc-raw-tr style="text-align:left;color:#93a8bb;font-size:12px;letter-spacing:0.06em;text-transform:uppercase">
+<sc-raw-th style="padding:10px 12px;font-weight:600">Obstruction</sc-raw-th>
+<sc-raw-th style="padding:10px 12px;font-weight:600;text-align:right">Accuracy</sc-raw-th>
+<sc-raw-th style="padding:10px 12px;font-weight:600;text-align:right">False positive</sc-raw-th>
+<sc-raw-th style="padding:10px 12px;font-weight:600;text-align:right">False negative</sc-raw-th>
+</sc-raw-tr>
+</sc-raw-thead>
+<sc-raw-tbody>
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="4">
+<sc-raw-tr style="background:{{r.bg}}">
+<sc-raw-td style="padding:12px;border-top:1px solid #1e2d3b">{{r.name}}</sc-raw-td>
+<sc-raw-td style="padding:12px;border-top:1px solid #1e2d3b;text-align:right;font-family:'JetBrains Mono',monospace">{{r.acc}}</sc-raw-td>
+<sc-raw-td style="padding:12px;border-top:1px solid #1e2d3b;text-align:right;font-family:'JetBrains Mono',monospace">{{r.fp}}</sc-raw-td>
+<sc-raw-td style="padding:12px;border-top:1px solid #1e2d3b;text-align:right;font-family:'JetBrains Mono',monospace">{{r.fn}}</sc-raw-td>
+</sc-raw-tr>
+</sc-for>
+</sc-raw-tbody>
+</sc-raw-table>
+</div>
+<div style="font-size:13px;color:#93a8bb;line-height:1.5">The highlighted row matches the obstruction behind the selected node. Metrics fill in from controlled through-wall trials.</div>
+</div>
+
+<div style="flex:1 1 380px;min-width:0;background:#101922;border:1px solid #1e2d3b;border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:12px">
+<h2 style="margin:0;font-size:16px;font-weight:600">Mesh communication</h2>
+<svg sc-camel-view-box="0 0 360 215" role="img" aria-label="Mesh topology: four sensing nodes linked to the base station, with an alternate relay path from node 4 through node 3" style="width:100%;height:auto;display:block;background:#0b121a;border-radius:8px">
+<line x1="45" y1="125" x2="180" y2="185" stroke="#4a6076" stroke-width="2"></line>
+<line x1="110" y1="45" x2="180" y2="185" stroke="#4a6076" stroke-width="2"></line>
+<line x1="250" y1="45" x2="180" y2="185" stroke="#4a6076" stroke-width="2"></line>
+<line x1="320" y1="125" x2="180" y2="185" stroke="{{directStroke}}" stroke-width="2" stroke-dasharray="{{directDash}}"></line>
+<line x1="320" y1="125" x2="250" y2="45" stroke="{{relayStroke}}" stroke-width="2.5" stroke-dasharray="{{relayDash}}"></line>
+<circle cx="45" cy="125" r="16" fill="#152230" stroke="{{c1}}" stroke-width="3"></circle>
+<circle cx="110" cy="45" r="16" fill="#152230" stroke="{{c2}}" stroke-width="3"></circle>
+<circle cx="250" cy="45" r="16" fill="#152230" stroke="{{c3}}" stroke-width="3"></circle>
+<circle cx="320" cy="125" r="16" fill="#152230" stroke="{{c4}}" stroke-width="3"></circle>
+<rect x="162" y="167" width="36" height="36" rx="6" fill="#152230" stroke="{{accent}}" stroke-width="3"></rect>
+<text x="45" y="130" text-anchor="middle" fill="#e6eef6" font-size="12" font-weight="600" font-family="JetBrains Mono, monospace">N1</text>
+<text x="110" y="50" text-anchor="middle" fill="#e6eef6" font-size="12" font-weight="600" font-family="JetBrains Mono, monospace">N2</text>
+<text x="250" y="50" text-anchor="middle" fill="#e6eef6" font-size="12" font-weight="600" font-family="JetBrains Mono, monospace">N3</text>
+<text x="320" y="130" text-anchor="middle" fill="#e6eef6" font-size="12" font-weight="600" font-family="JetBrains Mono, monospace">N4</text>
+<text x="180" y="190" text-anchor="middle" fill="#e6eef6" font-size="12" font-weight="600" font-family="JetBrains Mono, monospace">BS</text>
+</svg>
+<div style="font-size:13px;color:#c4d2df;line-height:1.5">{{pathNote}}</div>
+<button sc-camel-on-click="{{toggleCut}}" style="cursor:pointer;background:{{cutBg}};color:{{cutFg}};border:1px solid {{cutBorder}};border-radius:8px;padding:10px 16px;min-height:44px;font-size:14px;font-weight:600">{{cutLabel}}</button>
+<div style="display:flex;flex-direction:column">
+<sc-for list="{{meshRows}}" as="m" hint-placeholder-count="6">
+<div style="display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid #1e2d3b;font-size:13px"><span style="color:#c4d2df">{{m.k}}</span><span style="font-family:'JetBrains Mono',monospace;text-align:right;color:{{m.color}}">{{m.v}}</span></div>
+</sc-for>
+</div>
+</div>
+</div>
+
+</div>
+</sc-if>
+
+<!-- ============ ALERTS & LOG ============ -->
+<sc-if value="{{isLog}}" hint-placeholder-val="{{false}}">
+<div style="display:flex;flex-direction:column;gap:18px">
+
+<div style="background:#101922;border:1px solid #1e2d3b;border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
+<h2 style="margin:0;font-size:16px;font-weight:600">Alerts</h2>
+<span style="font-size:13px;color:#93a8bb">{{alertCount}} open</span>
+</div>
+<div style="display:flex;flex-direction:column;gap:10px">
+<sc-for list="{{alerts}}" as="a" hint-placeholder-count="3">
+<div style="background:#152230;border:1px solid #1e2d3b;border-radius:8px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;opacity:{{a.op}}">
+<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+<span style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;letter-spacing:0.08em;color:{{a.color}};border:1px solid {{a.color}};border-radius:4px;padding:2px 7px">{{a.tag}}</span>
+<span style="font-size:14px;font-weight:600">{{a.title}}</span>
+</div>
+<div style="font-size:13px;color:#c4d2df;line-height:1.45">{{a.detail}}</div>
+<div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+<span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#93a8bb">{{a.time}}</span>
+<button sc-camel-on-click="{{a.toggle}}" style="cursor:pointer;background:transparent;color:#e6eef6;border:1px solid #33475a;border-radius:6px;padding:8px 14px;min-height:44px;font-size:13px;font-weight:500">{{a.ackLabel}}</button>
+</div>
+</div>
+</sc-for>
+</div>
+</div>
+
+<div style="background:#101922;border:1px solid #1e2d3b;border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+<h2 style="margin:0;font-size:16px;font-weight:600">System log</h2>
+<div style="display:flex;flex-wrap:wrap;gap:8px">
+<sc-for list="{{filters}}" as="f" hint-placeholder-count="4">
+<button sc-camel-on-click="{{f.pick}}" aria-pressed="{{f.pressed}}" style="cursor:pointer;background:{{f.bg}};color:{{f.fg}};border:1px solid {{f.border}};border-radius:6px;padding:8px 16px;min-height:44px;font-size:13px;font-weight:600">{{f.label}}</button>
+</sc-for>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;font-family:'JetBrains Mono',monospace;font-size:13px">
+<sc-for list="{{logs}}" as="l" hint-placeholder-count="8">
+<div style="display:flex;flex-wrap:wrap;gap:6px 16px;padding:10px 0;border-top:1px solid #1e2d3b">
+<span style="color:#93a8bb;flex:0 0 72px">{{l.time}}</span>
+<span style="color:{{l.color}};font-weight:600;flex:0 0 70px">{{l.cat}}</span>
+<span style="color:#d5e0ec;flex:1 1 320px;min-width:0">{{l.text}}</span>
+</div>
+</sc-for>
+</div>
+</div>
+
+</div>
+</sc-if>
+
+<div style="font-size:13px;color:#93a8bb;line-height:1.55;border-top:1px solid #1e2d3b;padding-top:14px">Signs-of-life indication only. This tool does not identify individuals or confirm a person's survival status, and it supplements, not replaces, conventional search-and-rescue equipment. All values shown are simulated demo data.</div>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script="" data-props="{&quot;accent&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#25e0a1&quot;,&quot;options&quot;:[&quot;#25e0a1&quot;,&quot;#7cb8ff&quot;,&quot;#ffb454&quot;]},&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:1700}}">
+class Component extends DCLogic {
+  state = { tab: 'dash', sel: 'N2', cut: false, filter: 'All', ack: {}, report: false };
+
+  series(seed, occupied) {
+    let s = seed;
+    const rnd = () => { s = (s * 9301 + 49297) % 233280; return s / 233280; };
+    const pts = [];
+    for (let i = 0; i < 60; i++) {
+      let v = 0.16 + rnd() * 0.07;
+      if (occupied) v += 0.26 + 0.14 * Math.sin(i * 0.55) + rnd() * 0.04;
+      v = Math.max(0.02, Math.min(0.98, v));
+      const x = i * 9.3;
+      const y = 150 - v * 130;
+      pts.push(x.toFixed(1) + ',' + y.toFixed(1));
+    }
+    return pts.join(' ');
+  }
+
+  jet(v) {
+    const c = (x) => Math.max(0, Math.min(1, x));
+    const r = c(1.5 - Math.abs(4 * v - 3));
+    const g = c(1.5 - Math.abs(4 * v - 2));
+    const b = c(1.5 - Math.abs(4 * v - 1));
+    return 'rgb(' + Math.round(r * 255) + ',' + Math.round(g * 255) + ',' + Math.round(b * 255) + ')';
+  }
+
+  renderVals() {
+    const s = this.state;
+    const accent = this.props.accent ?? '#25e0a1';
+    const OCC = '#ffb454', CLR = '#7cb8ff', BAD = '#ff8a8a', MUT = '#93a8bb';
+    const cut = s.cut;
+
+    const defs = [
+      { id: 'N1', zone: 'Zone A · concrete slab', mat: 'concrete', occ: false, conf: 93, rssi: -61, batt: 84, rate: 98, seed: 11,
+        feats: ['0.021', '0.8 dB', '0.03'] },
+      { id: 'N2', zone: 'Zone B · wood panel', mat: 'wood', occ: true, conf: 87, rssi: -54, batt: 71, rate: 100, seed: 23,
+        feats: ['0.184', '9.6 dB', '0.11'] },
+      { id: 'N3', zone: 'Zone C · metal sheet', mat: 'metal', occ: false, conf: 64, rssi: -73, batt: 58, rate: 94, seed: 37,
+        feats: ['0.047', '1.9 dB', '0.05'] },
+      { id: 'N4', zone: 'Zone D · mixed rubble', mat: 'concrete + wood', occ: true, conf: 71, rssi: -67, batt: 77, rate: 97, seed: 51,
+        feats: ['0.126', '6.2 dB', '0.08'] }
+    ];
+    const sd = defs.find((d) => d.id === s.sel) || defs[1];
+
+    const navs = [['dash', 'Dashboard'], ['ana', 'Analytics'], ['log', 'Alerts & log']].map((t) => {
+      const on = s.tab === t[0];
+      return {
+        label: t[1],
+        bg: on ? '#16322c' : 'transparent',
+        fg: on ? accent : '#c4d2df',
+        border: on ? accent : 'transparent',
+        pressed: on ? 'true' : 'false',
+        pick: () => this.setState({ tab: t[0] })
+      };
+    });
+    const titles = { dash: 'Dashboard', ana: 'Analytics', log: 'Alerts & log' };
+
+    const meshNodes = defs.map((d) => {
+      const n = d.rssi > -60 ? 4 : d.rssi > -66 ? 3 : d.rssi > -72 ? 2 : 1;
+      return {
+        name: 'Node ' + d.id.slice(1).padStart(2, '0'),
+        aria: d.id + ' online, signal ' + n + ' of 4. Open in analytics.',
+        bars: [1, 2, 3, 4].map((i) => ({ h: (4 + i * 3.5) + 'px', bg: i <= n ? accent : '#2a3a4a' })),
+        pick: () => this.setState({ sel: d.id, tab: 'ana' })
+      };
+    });
+
+    const HC = 24, HR = 12;
+    const hp = { N1: [4, 9], N2: [4, 2], N3: [19, 2], N4: [19, 9] };
+    const heat = [];
+    for (let r = 0; r < HR; r++) {
+      for (let c = 0; c < HC; c++) {
+        let v = 0.04 + ((r * 7 + c * 13) % 5) * 0.006;
+        defs.forEach((d) => {
+          const p = hp[d.id];
+          const dx = c - p[0], dy = r - p[1];
+          const strength = d.occ ? d.conf / 100 : 0.1;
+          v += strength * Math.exp(-(dx * dx + dy * dy) / (2 * 2.6 * 2.6));
+        });
+        heat.push({ bg: this.jet(Math.max(0, Math.min(1, v))) });
+      }
+    }
+
+    const tiles = [
+      { label: 'Detection events', value: '43', sub: 'today' },
+      { label: 'Peak simultaneous', value: '2', sub: 'zones' },
+      { label: 'Average confidence', value: '79%', sub: 'occupied zones' },
+      { label: 'Est. node runtime', value: '6 h 40 m', sub: 'lowest battery' }
+    ];
+
+    const alertsBase = [
+      { id: 'a1', tag: 'PRIORITY', color: OCC, title: 'Possible signs of life · Zone B',
+        detail: 'N2 sees a breathing-band signature behind the wood panel at 87% confidence. Recommend a manual check of this area.', time: '21:07:58' },
+      { id: 'a2', tag: 'REVIEW', color: OCC, title: 'Breathing-band activity · Zone D',
+        detail: 'N4 is above threshold behind mixed rubble, but confidence is only 71%. Re-scan before acting.', time: '21:07:12' },
+      { id: 'a3', tag: 'WARNING', color: BAD, title: 'Weak signal · N3',
+        detail: 'RSSI is -73 dBm, below the -70 dBm advisory level. Consider moving N3 closer to Zone C.', time: '21:06:50' }
+    ];
+    if (cut) {
+      alertsBase.unshift({ id: 'a0', tag: 'WARNING', color: BAD, title: 'Link lost · N4 to base',
+        detail: 'Direct path is down. N4 now relays through N3 (2 hops) and results are still arriving.', time: '21:08:20' });
+    }
+    const alerts = alertsBase.map((a) => {
+      const acked = !!s.ack[a.id];
+      return {
+        tag: a.tag, color: a.color, title: a.title, detail: a.detail, time: a.time,
+        op: acked ? '0.55' : '1',
+        ackLabel: acked ? 'Acknowledged' : 'Acknowledge',
+        toggle: () => this.setState({ ack: Object.assign({}, s.ack, { [a.id]: !acked }) })
+      };
+    });
+    const openAlerts = alertsBase.filter((a) => !s.ack[a.id]).length;
+
+    const kpis = [
+      { label: 'Nodes online', value: '4 / 4', color: accent, sub: 'All nodes reporting CSI' },
+      { label: 'Zones flagged', value: '2', color: OCC, sub: 'Zone B, Zone D' },
+      { label: 'Packet delivery', value: cut ? '93.8%' : '97.6%', color: cut ? OCC : accent, sub: 'Last 5 min, all nodes' },
+      { label: 'End-to-end latency', value: cut ? '214 ms' : '86 ms', color: cut ? OCC : accent, sub: 'Node to dashboard' }
+    ];
+
+    const rows = [
+      { name: 'Wood', acc: '94.2%', fp: '4.1%', fn: '7.5%', key: 'wood' },
+      { name: 'Concrete', acc: '89.6%', fp: '6.8%', fn: '13.9%', key: 'concrete' },
+      { name: 'Metal', acc: '71.3%', fp: '12.5%', fn: '45.0%', key: 'metal' },
+      { name: 'Concrete + wood (rubble mix)', acc: '82.7%', fp: '9.4%', fn: '22.8%', key: 'concrete + wood' }
+    ].map((r) => Object.assign({}, r, { bg: r.key === sd.mat ? '#16222e' : 'transparent' }));
+
+    const meshRows = [
+      { k: 'Packet delivery ratio', v: cut ? '93.8%' : '97.6%', color: cut ? OCC : '#e6eef6' },
+      { k: 'End-to-end latency', v: cut ? '214 ms' : '86 ms', color: cut ? OCC : '#e6eef6' },
+      { k: 'Communication range (tested)', v: '18 m', color: '#e6eef6' },
+      { k: 'N4 path to base', v: cut ? 'via N3 (2 hops)' : 'Direct (1 hop)', color: cut ? OCC : '#e6eef6' },
+      { k: 'Message delivery on path loss', v: cut ? 'Delivered via relay' : 'Not triggered', color: cut ? accent : '#e6eef6' },
+      { k: 'Setup time (4 nodes + base)', v: '4 min 20 s', color: '#e6eef6' }
+    ];
+
+    const logsAll = [
+      { time: '21:07:58', cat: 'Detect', text: 'N2 classified OCCUPIED (87%) · Zone B wood panel' },
+      { time: '21:07:41', cat: 'Mesh', text: cut ? 'N4 to base delivered via N3, 192 ms' : 'N4 to base delivered, 84 ms' },
+      { time: '21:07:12', cat: 'Detect', text: 'N4 breathing-band energy above threshold · Zone D' },
+      { time: '21:06:50', cat: 'System', text: 'N3 RSSI -73 dBm, below -70 dBm advisory level' },
+      { time: '21:06:20', cat: 'Mesh', text: 'Route table updated: 4 nodes, 0 dropped' },
+      { time: '21:05:55', cat: 'System', text: 'Empty-room baseline captured for all nodes' },
+      { time: '21:05:10', cat: 'System', text: 'Base station AP up, offline mode, dashboard served locally' },
+      { time: '21:04:48', cat: 'Mesh', text: 'Nodes N1 to N4 joined the mesh' }
+    ];
+    if (cut) {
+      logsAll.unshift({ time: '21:08:21', cat: 'Mesh', text: 'Rerouted N4 to N3 to base (2 hops), delivery resumed' });
+      logsAll.unshift({ time: '21:08:20', cat: 'Mesh', text: 'Direct path N4 to base lost' });
+    }
+    const catColor = { Detect: OCC, Mesh: CLR, System: MUT };
+    const logs = logsAll
+      .filter((l) => s.filter === 'All' || l.cat === s.filter)
+      .map((l) => Object.assign({}, l, { color: catColor[l.cat] }));
+
+    const filters = ['All', 'Detect', 'Mesh', 'System'].map((f) => {
+      const on = s.filter === f;
+      return {
+        label: f,
+        bg: on ? accent : 'transparent',
+        fg: on ? '#0a1017' : '#e6eef6',
+        border: on ? accent : '#33475a',
+        pressed: on ? 'true' : 'false',
+        pick: () => this.setState({ filter: f })
+      };
+    });
+
+    const nodePicks = defs.map((d) => {
+      const on = s.sel === d.id;
+      return {
+        label: d.id,
+        bg: on ? accent : 'transparent',
+        fg: on ? '#0a1017' : '#e6eef6',
+        border: on ? accent : '#33475a',
+        pressed: on ? 'true' : 'false',
+        pick: () => this.setState({ sel: d.id })
+      };
+    });
+
+    return {
+      accent, navs, pageTitle: titles[s.tab],
+      isDash: s.tab === 'dash', isAna: s.tab === 'ana', isLog: s.tab === 'log',
+      occCount: defs.filter((d) => d.occ).length,
+      meshNodes, heat, tiles, kpis, alerts, alertCount: openAlerts, rows, meshRows, logs, filters, nodePicks,
+      makeReport: () => this.setState({ report: true }),
+      reportNote: s.report ? 'Demo only: a real build would export the detection log and metrics as a PDF.' : '',
+      selId: sd.id, selZone: sd.zone, selMat: sd.mat,
+      selStatus: sd.occ ? 'OCCUPIED' : 'CLEAR',
+      selColor: sd.occ ? OCC : CLR,
+      selConf: sd.conf + '%',
+      chartPoints: this.series(sd.seed, sd.occ),
+      feats: [
+        { k: 'Amplitude variance', v: sd.feats[0] },
+        { k: 'Breathing-band power (0.2–0.5 Hz)', v: sd.feats[1] },
+        { k: 'Motion index', v: sd.feats[2] },
+        { k: 'CSI sample rate', v: sd.rate + ' pkt/s' }
+      ],
+      c1: CLR, c2: OCC, c3: CLR, c4: OCC,
+      directStroke: cut ? BAD : '#4a6076',
+      directDash: cut ? '4 6' : '0',
+      relayStroke: cut ? accent : '#33475a',
+      relayDash: cut ? '0' : '3 6',
+      pathNote: cut
+        ? 'The direct link from N4 to the base station is down. N4 results now hop through N3 and still reach the dashboard.'
+        : 'All nodes reach the base station directly. The dotted N4 to N3 link is the standby relay path.',
+      toggleCut: () => this.setState({ cut: !cut }),
+      cutLabel: cut ? 'Restore N4 ↔ base link' : 'Simulate N4 ↔ base link cut',
+      cutBg: cut ? 'transparent' : accent,
+      cutFg: cut ? '#e6eef6' : '#0a1017',
+      cutBorder: cut ? '#33475a' : accent
+    };
+  }
+}
+</script>
+
+
+</body></html>

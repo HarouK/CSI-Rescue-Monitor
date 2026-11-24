@@ -1,0 +1,14 @@
+# Unfinished features and limitations
+- APK not built or run on Android (see TEST_REPORT.md). Gradle wrapper not included (open in Android Studio, which creates it).
+- Firmware protocol is a proposal. Real firmware needs matching, or `csi-protocol.js` adapting.
+- No detection algorithm in the app; estimates come from the gateway and are unvalidated.
+- Map/heatmap support nodes N1-N4 only (extra nodes appear in lists). Zone positions are fixed.
+- Connection runs only while the app is open; no foreground service, so Android may suspend it in the background. Notifications fire only while the app process is alive.
+- WebSocket `ws://` only (no TLS/auth). Anyone on the Wi-Fi network could see the data; protect the gateway network.
+- Fonts: only the two font files embedded in the original were bundled; other weights fall back to system fonts.
+- History is in memory (last ~5 min per node); logs keep 500 entries; no persistent database. Exports are CSV (log) and JSON (report).
+- Back handling uses `onBackPressed` (fine through Android 14; migrate to the predictive-back API for Android 15+ targets).
+- Detection performance table is empty in Hardware Mode unless the gateway sends `trial_metrics`.
+- Test Connection checks that a WebSocket opens and whether a valid frame arrives within a few seconds; it cannot tell whether the data is physically correct.
+- Settings are stored in WebView localStorage; clearing app data resets them.
+- Demo data is simulated and labelled DEMO everywhere; its estimate values are fixed scripts, not detections.
