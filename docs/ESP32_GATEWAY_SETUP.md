@@ -8,4 +8,4 @@
    - Status: Connecting, Connected · waiting for data, Receiving, Stale (no data), Reconnecting (attempt n, retry in s).
    - Reconnect uses 1 s, 2 s, 4 s ... capped at 15 s. **Disconnect** stops it. The address is remembered and reused on next launch after a Connect.
 4. Android may block Wi-Fi without internet: if data never arrives, check the phone did not auto-switch to mobile data ("Connect anyway" / disable "Switch to mobile data").
-5. Test without hardware: `npm i ws && node tools/mock-gateway.js 81`, then connect to your PC's LAN IP (or 10.0.2.2 from the emulator). The mock sends fixed values and is a test tool, not firmware.
+5. Test without hardware: `node tools/gateway-simulator.js` (no npm install; see docs/GATEWAY_SIMULATOR.md), then connect to your PC's LAN IP. The simulator is a labelled test tool, not firmware.

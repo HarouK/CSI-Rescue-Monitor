@@ -43,7 +43,8 @@
 
     // ---- header ----
     out.accent = accent; out.isDemo = demo; out.isHw = !demo;
-    out.modeLabel = demo ? 'DEMO DATA' : 'HARDWARE'; out.modeColor = demo ? OCC : accent;
+    var sim = !demo && !!(v.ds.hello && v.ds.hello.simulated);
+    out.modeLabel = demo ? 'DEMO DATA' : sim ? 'SOFTWARE SIMULATOR' : 'HARDWARE'; out.modeColor = demo || sim ? OCC : accent;
     out.dateText = dateText(now);
     var L = linkText(link, v, now, accent);
     out.linkText = L.text; out.linkColor = L.color;
@@ -51,13 +52,16 @@
     var B = banner(link, v, now);
     out.showBanner = !!B; out.bannerText = B ? B.text : ''; out.bannerDetail = B ? B.detail : ''; out.bannerColor = B ? B.color : OCC;
 
-    var titles = { dash: 'Dashboard', ana: 'Analytics', log: 'Alerts & log', conn: 'Connection' };
-    out.navs = [['dash', 'Dashboard'], ['ana', 'Analytics'], ['log', 'Alerts & log'], ['conn', 'Connection']].map(function (t) {
-      var on = ui.tab === t[0];
-      return { label: t[1], bg: on ? '#16322c' : 'transparent', fg: on ? accent : '#c4d2df', border: on ? accent : 'transparent', pressed: on ? 'true' : 'false', pick: function () { act.set({ tab: t[0] }); } };
+    var lv = ui.logView || 'both';
+    var titles = { dash: 'Observatory', ana: 'Analytics', log: lv === 'alerts' ? 'Alerts' : lv === 'logs' ? 'Logs' : 'Alerts & log', conn: 'Connection' };
+    out.navs = [['dash', 'both', 'Observatory', 'Observe'], ['ana', 'both', 'Analytics', 'Analytics'], ['log', 'alerts', 'Alerts', 'Alerts'], ['log', 'logs', 'Logs', 'Logs'], ['conn', 'both', 'Connection', 'Setup']].map(function (t) {
+      var on = ui.tab === t[0] && (t[0] !== 'log' || lv === t[1] || (lv === 'both' && t[1] === 'alerts'));
+      return { label: t[2], short: t[3], bg: on ? 'rgba(37,224,161,0.12)' : 'transparent', fg: on ? accent : '#c4d2df', border: on ? accent : 'transparent', pressed: on ? 'true' : 'false', pick: function () { act.go(t[0], t[1]); } };
     });
     out.pageTitle = titles[ui.tab];
     out.isDash = ui.tab === 'dash'; out.isAna = ui.tab === 'ana'; out.isLog = ui.tab === 'log'; out.isConn = ui.tab === 'conn';
+    out.openSettings = function () { act.go('conn', 'both'); };
+    out.showAlerts = lv !== 'logs'; out.showLogs = lv !== 'alerts';
 
     // ---- dashboard ----
     var online = nodes.filter(function (n) { return n.status === 'online'; }).length;
@@ -259,7 +263,7 @@
       { k: 'Reconnect attempt', v: link.attempt ? String(link.attempt) : '0', color: TXT },
       { k: 'Next retry', v: link.state === 'reconnecting' && link.nextRetryAt ? 'in ' + Math.max(0, Math.round((link.nextRetryAt - now) / 1000)) + ' s' : '—', color: link.state === 'reconnecting' ? OCC : TXT },
       { k: 'Last error', v: link.error ? friendly(link.error) : (s.lastError || 'none'), color: (link.error || s.lastError) ? BAD : TXT },
-      { k: 'Gateway', v: v.ds.hello ? (v.ds.hello.gatewayId || 'unnamed') + (v.ds.hello.fw ? ' · fw ' + v.ds.hello.fw : '') : 'no hello received', color: TXT },
+      { k: 'Gateway', v: v.ds.hello ? (v.ds.hello.simulated ? 'SOFTWARE SIMULATOR · ' : '') + (v.ds.hello.gatewayId || 'unnamed') + (v.ds.hello.kind ? ' · ' + v.ds.hello.kind : '') + (v.ds.hello.fw ? ' · fw ' + v.ds.hello.fw : '') : 'no hello received', color: TXT },
       { k: 'Stale after', v: Math.round(v.staleMs / 1000) + ' s without data', color: TXT }
     ];
     var needHints = link.state === 'reconnecting' || (link.state === 'idle' && !!link.error) || (T && (T.state === 'fail' || T.state === 'warn'));
@@ -268,6 +272,67 @@
     out.connEvents = v.log.filter(function (l) { return l.cat === 'Gateway'; }).slice(0, 8).map(function (l) { var sv = l.sev || 'Info'; return { time: hms(l.t), sev: sv.toUpperCase(), sevColor: SEV_COLOR[sv], text: l.text }; });
     out.noConnEvents = out.connEvents.length === 0;
     out.example = EXAMPLE;
+
+    // ---- observatory (3D scene + panels) ----
+    var OBS_MODES = [['presence', 'Human Presence', 'Show presence estimates per zone'], ['vital', 'Vital Sign Monitoring', 'Show breathing-band power and validated vitals'], ['signal', 'Signal Monitoring', 'Show RSSI, variance and signal links']];
+    var obsMode = ui.obsMode || 'presence', camView = ui.cam || 'orbit';
+    out.obsModes = OBS_MODES.map(function (m) {
+      var on = obsMode === m[0];
+      return { label: m[1], aria: m[2], pressed: on ? 'true' : 'false', fg: on ? '#04070a' : '#c4d2df', bg: on ? accent : 'transparent', border: on ? accent : 'rgba(61,232,255,0.25)', pick: function () { act.obs(m[0]); } };
+    });
+    out.camBtns = [['orbit', 'Orbit'], ['top', 'Top'], ['front', 'Front']].map(function (c) {
+      var on = camView === c[0];
+      return { label: c[1], pressed: on ? 'true' : 'false', fg: on ? accent : '#93a8bb', border: on ? accent : 'rgba(61,232,255,0.2)', pick: function () { act.cam(c[0]); } };
+    });
+    var nData = defs.filter(function (d) { return d.status === 'online' || d.status === 'stale'; });
+    var stateKey = demo ? 'demo' : link.state;
+    out.sceneTag = demo ? 'DEMO · simulated scene' : sim ? 'SOFTWARE SIMULATOR · simulated values, not physical measurements' : 'HARDWARE · zone-level estimates';
+    out.sceneTagColor = demo || sim ? OCC : accent;
+    out.sceneEmpty = '';
+    if (!demo) {
+      out.sceneEmpty = stateKey === 'idle' ? 'Hardware Mode · not connected. Showing the empty room only; no measurements. Open Connection to link the gateway.' :
+        stateKey === 'connecting' ? 'Connecting to the gateway…' :
+        stateKey === 'waiting' ? 'Connected · waiting for the first measurement.' :
+        stateKey === 'reconnecting' ? 'Gateway link lost · reconnecting. Markers show the last received estimates only.' :
+        stateKey === 'stale' ? 'DATA STALE · markers show the last received estimates, not live data.' :
+        (!nData.length ? 'Connected, but no node has reported yet.' : '');
+    }
+    out.hasSceneEmpty = !!out.sceneEmpty;
+    out.sceneCaption = 'Floor glow = per-node CSI variance spread around each node. It is not a position map. ' + (demo ? 'Silhouettes are illustrative DEMO shapes.' : 'Markers are zone-level estimates; the gateway sends no person positions.');
+    out.sceneAria = 'Three-dimensional room view with ' + defs.length + ' sensing nodes. ' + (flaggedNodes.length ? 'Presence estimated in ' + flaggedNodes.map(function (d) { return d.zoneShort; }).join(', ') + '. These are unvalidated estimates.' : 'No presence estimated.') + (demo ? ' All data is simulated.' : '');
+    out.occLine = flaggedNodes.length + ' / ' + defs.length;
+    out.occState = !demo && !nData.length ? 'NO DATA' : (flaggedNodes.length ? 'ESTIMATED' : 'NONE ESTIMATED');
+    out.occColor = !demo && !nData.length ? MUT : (flaggedNodes.length ? OCC : CLR);
+    out.occTitle = 'OCCUPANCY (EST.)';
+    out.occLong = (!demo && !nData.length) ? 'No data' : flaggedNodes.length + ' of ' + defs.length + ' zones flagged (estimate, not confirmed)';
+    // left panel: vital signs. Only gateway-validated values are shown; everything else is N/A.
+    var vNode = defs.filter(function (d) { return d.status === 'online' && d.vitals && d.vitals.validated === true; })[0] || null;
+    var hr = vNode && vNode.vitals.heartBpm !== null && vNode.vitals.heartBpm !== undefined ? String(Math.round(vNode.vitals.heartBpm)) : null;
+    var rr = vNode && vNode.vitals.respRpm !== null && vNode.vitals.respRpm !== undefined ? String(Math.round(vNode.vitals.respRpm * 10) / 10) : null;
+    out.heartText = hr || 'N/A'; out.heartColor = hr ? accent : MUT; out.heartNote = hr ? 'validated by gateway · ' + vNode.id : 'not measured by this system';
+    out.respText = rr || 'N/A'; out.respColor = rr ? accent : MUT; out.respNote = rr ? 'validated by gateway · ' + vNode.id : 'not measured by this system';
+    var bn = sd.status === 'online' && sd.breathDb !== null && sd.breathDb !== undefined ? sd.breathDb : null;
+    out.breathText = bn !== null ? bn.toFixed(1) + ' dB' : '—'; out.breathNote = 'Breathing-band power, ' + sd.id + ' · raw processed value, not a respiration rate';
+    var best = flaggedNodes.filter(function (d) { return d.est.conf !== null; }).sort(function (a, b) { return b.est.conf - a.est.conf; })[0] || null;
+    out.confText = best ? Math.round(best.est.conf * 100) : '—'; out.confUnit = best ? '%' : '';
+    out.confBar = best ? Math.round(best.est.conf * 100) + '%' : '0%';
+    out.confNote = best ? 'Estimate confidence · ' + best.zoneShort + (best.est.validated ? ' · validated by gateway' : ' · unvalidated') : 'No presence estimate to rate';
+    out.vitalsEmph = obsMode === 'vital' ? accent : 'rgba(61,232,255,0.22)';
+    // right panel: Wi-Fi signal for the selected node
+    var sOn = sd.status === 'online';
+    out.wsNode = sd.id;
+    out.wsRssi = sd.rssi !== null && sd.rssi !== undefined ? sd.rssi + ' dBm' : '—';
+    out.wsVar = sd.ampVar !== null && sd.ampVar !== undefined ? sd.ampVar.toFixed(3) : '—';
+    out.wsMotion = sd.motion !== null && sd.motion !== undefined ? sd.motion.toFixed(3) : '—';
+    out.wsPersons = demo ? String(flaggedNodes.length) : 'N/A'; out.wsPersonsNote = demo ? 'simulated: one per flagged zone' : 'not reported by gateway';
+    out.wsAge = sd.lastSeen ? 'last ' + hms(sd.lastSeen) + (sOn ? '' : ' · ' + (sd.status === 'nodata' ? 'no data' : 'stale')) : 'no data from ' + sd.id;
+    out.wsPresence = sd.status === 'nodata' ? 'NO DATA' : sd.status !== 'online' ? 'STALE' : !sd.est ? 'NO ESTIMATE' : sd.est.present ? 'PRESENCE ESTIMATED' : 'NONE ESTIMATED';
+    out.wsPresenceColor = sd.status !== 'online' || !sd.est ? MUT : sd.est.present ? OCC : CLR;
+    out.sparkPoints = many ? ser.map(function (p) { return ((p.t - (endT - W)) / W * 200).toFixed(1) + ',' + (38 - Math.min(1, p.v / vmax) * 34).toFixed(1); }).join(' ') : '0,38 200,38';
+    out.sparkOp = many ? '1' : '0.3';
+    out.sparkNote = many ? 'CSI variance · ' + sd.id + ' · last 60 s' + (fresh ? '' : ' (paused)') : 'No samples yet for ' + sd.id;
+    out.signalEmph = obsMode === 'signal' ? accent : 'rgba(61,232,255,0.22)';
+
     return out;
   }
 

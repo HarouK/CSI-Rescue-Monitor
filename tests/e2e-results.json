@@ -37,7 +37,7 @@
   {
     "name": "log: category filters work and CSV export downloads with DEMO label",
     "pass": true,
-    "detail": "csi-log-DEMO-20261124-113359.csv"
+    "detail": "csi-log-DEMO-20261127-031521.csv"
   },
   {
     "name": "dashboard: \"Generate report\" exports DEMO-labelled JSON",
@@ -185,9 +185,94 @@
     "detail": ""
   },
   {
-    "name": "layout: no horizontal overflow on 4 tabs x 7 sizes x 2 modes",
+    "name": "OBSERVATORY demo: scene draws on canvas, 4 nodes, DEMO silhouettes only for flagged zones, labelled illustrative",
     "pass": true,
-    "detail": "56 combinations"
+    "detail": ""
+  },
+  {
+    "name": "OBSERVATORY controls: Human Presence / Vital Sign / Signal Monitoring switch the real overlay; Orbit/Top/Front camera; node picker",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "OBSERVATORY drag orbits the camera without errors",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "OBSERVATORY hardware (not connected): empty room only, no markers, no demo values, no invented vitals",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "OBSERVATORY hardware live: zone-level markers from mock gateway (no silhouettes, no person positions), values per node",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "OBSERVATORY stale: frames stop -> scene says last received, nodes marked stale, no demo fallback; resumes when data returns",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "OBSERVATORY connection loss: scene shows no live nodes, then recovers",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "OBSERVATORY fallback: canvas unavailable -> text summary shown, app still works, no JS errors",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "OBSERVATORY navigation: Observatory/Analytics/Alerts/Logs/Connection each open their own section",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "SIMULATOR connect: Hardware Mode connects to /csi, hello received, header says SOFTWARE SIMULATOR, four nodes online",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "SIMULATOR controls: RSSI and CSI variance changes appear in the app; presence estimate toggles; values stay labelled estimates",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "SIMULATOR node failures: silent node goes stale then offline; announced disconnect is offline at once; restore recovers",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "SIMULATOR malformed + unknown + duplicate messages: counted, logged, UI keeps working, valid values not overwritten",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "SIMULATOR stale gateway: stop keeps socket open but silent -> DATA STALE, last values kept, never demo; start resumes",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "SIMULATOR gateway interruption: LINK LOST + reconnecting while refused; auto-reconnect after restore",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "SIMULATOR isolation: Demo Mode shows no simulator label or simulator values; back to Hardware keeps its own data",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "SIMULATOR control panel page and API respond (local control UI)",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "layout: no horizontal overflow on 4 tabs x 9 sizes x 2 modes",
+    "pass": true,
+    "detail": "72 combinations"
   },
   {
     "name": "rotation: portrait <-> landscape re-flows without errors or state loss",

@@ -18,7 +18,7 @@
   function newDataset(source, now) {
     return {
       source: source, nodes: {}, order: [], history: {}, alerts: [], log: [],
-      stats: { rx: 0, frames: 0, malformed: 0, unknown: 0, lastMsgAt: null, lastFrameAt: null, lastError: null, lastErrorAt: null, openedAt: null, connects: 0 },
+      stats: { rx: 0, frames: 0, malformed: 0, unknown: 0, dupOld: 0, lastMsgAt: null, lastFrameAt: null, lastError: null, lastErrorAt: null, openedAt: null, connects: 0 },
       mesh: {}, power: null, hello: null, metrics: null, threshold: null, staleMs: 5000,
       det: { day: dayKey(now), events: 0, peak: 0 }
     };
@@ -204,12 +204,12 @@
     return n;
   };
   Store.prototype._hello = function (ds, m, now) {
-    ds.hello = { gatewayId: m.gatewayId, fw: m.fw, at: now };
+    ds.hello = { gatewayId: m.gatewayId, fw: m.fw, simulated: m.simulated === true, kind: m.kind || null, at: now };
     if (m.threshold !== undefined) ds.threshold = m.threshold;
     if (m.staleMs !== undefined) ds.staleMs = m.staleMs;
     var self = this;
-    m.nodes.forEach(function (n) { var r = self._node(ds, n.id, now); r.zone = n.zone; r.material = n.material; });
-    this._log(ds, 'Gateway', 'Gateway hello' + (m.gatewayId ? ': ' + m.gatewayId : '') + (m.fw ? ' (fw ' + m.fw + ')' : '') + ', ' + m.nodes.length + ' node(s) declared', 'gateway', 'Info');
+    m.nodes.forEach(function (n) { var r = self._node(ds, n.id, now); r.zone = n.zone; r.material = n.material; r.pos = n.pos || null; });
+    this._log(ds, 'Gateway', (m.simulated ? 'SOFTWARE SIMULATOR hello' : 'Gateway hello') + (m.gatewayId ? ': ' + m.gatewayId : '') + (m.fw ? ' (fw ' + m.fw + ')' : '') + ', ' + m.nodes.length + ' node(s) declared', 'gateway', 'Info');
   };
   Store.prototype._status = function (ds, m, now) {
     if (m.power) ds.power = { source: m.power.source, runtimeMin: m.power.runtimeMin, at: now };
@@ -218,6 +218,12 @@
   };
   Store.prototype._frame = function (ds, m, now) {
     var n = this._node(ds, m.node, now);
+    // Duplicate / out-of-order frame: an older or repeated seq must not overwrite newer values.
+    // A run of 3 consecutive "old" frames is treated as a node restart (seq counter reset) and accepted.
+    if (m.seq !== null && n.seq !== null && m.seq <= n.seq && n.seq - m.seq < 8 && (n.oldRun = (n.oldRun || 0) + 1) < 3) {
+      ds.stats.dupOld = (ds.stats.dupOld || 0) + 1; ds.stats.rx--; return;
+    }
+    n.oldRun = 0;
     // PDR bookkeeping from sequence numbers
     var expected = 1;
     if (m.seq !== null && n.seq !== null && m.seq > n.seq && m.seq - n.seq < 1000) expected = m.seq - n.seq;
@@ -230,7 +236,7 @@
     n.rssi = m.rssi === undefined ? null : m.rssi; n.ampVar = m.ampVar === undefined ? null : m.ampVar;
     n.pktRate = m.pktRate === undefined ? null : m.pktRate; n.battPct = m.battPct === undefined ? null : m.battPct;
     n.breathDb = m.breathDb === undefined ? null : m.breathDb; n.motion = m.motion === undefined ? null : m.motion;
-    n.est = m.est; n.route = m.route;
+    n.est = m.est; n.route = m.route; n.vitals = m.vitals || null;
     var h = ds.history[m.node] || (ds.history[m.node] = []);
     h.push({ t: now, v: n.ampVar });
     while (h.length > MAX_HIST || (h.length && now - h[0].t > HIST_MS)) h.shift();
@@ -418,7 +424,7 @@
     var v = this.view(), mode = v.mode;
     return JSON.stringify({
       app: 'CSI Rescue Monitor', exportedAt: new Date(v.now).toISOString(),
-      dataSource: mode === 'demo' ? 'DEMO: simulated values, not sensor measurements' : 'HARDWARE: values received from gateway',
+      dataSource: mode === 'demo' ? 'DEMO: simulated values, not sensor measurements' : (this.ds.hardware.hello && this.ds.hardware.hello.simulated ? 'HARDWARE MODE via SOFTWARE SIMULATOR: values are simulated, not physical measurements' : 'HARDWARE: values received from gateway'),
       disclaimer: 'Presence values are unvalidated estimates, not confirmed detections.',
       gateway: mode === 'hardware' ? { config: v.config, link: v.link.state, lastMessageAt: v.stats.lastMsgAt ? new Date(v.stats.lastMsgAt).toISOString() : null, framesReceived: v.stats.rx, malformedFrames: v.stats.malformed } : null,
       nodes: v.nodes.map(function (n) { return { id: n.id, status: n.status, lastReceivedAt: n.lastSeen ? new Date(n.lastSeen).toISOString() : null, raw: { rssi_dbm: n.rssi, amp_var: n.ampVar, pkt_rate: n.pktRate }, processed: { breath_band_db: n.breathDb, motion_idx: n.motion }, estimate: n.est, battery_pct: n.battPct }; }),

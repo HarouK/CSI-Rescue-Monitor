@@ -4,7 +4,8 @@ const P = require('../app/src/main/assets/www/assets/csi-protocol.js');
 const { Transport } = require('../app/src/main/assets/www/assets/csi-transport.js');
 const { Store } = require('../app/src/main/assets/www/assets/csi-store.js');
 const { createDemo } = require('../app/src/main/assets/www/assets/csi-demo.js');
-const frame = (o) => JSON.stringify(Object.assign({ v: 1, type: 'node_frame', node: 'N2', seq: 1, raw: { rssi: -54, amp_var: 0.18 }, estimate: { present: true, confidence: 0.87 } }, o));
+let SEQ = 0; // each fixture frame gets a new sequence number, like a real node (constant seq would now count as duplicates)
+const frame = (o) => JSON.stringify(Object.assign({ v: 1, type: 'node_frame', node: 'N2', seq: ++SEQ, raw: { rssi: -54, amp_var: 0.18 }, estimate: { present: true, confidence: 0.87 } }, o));
 
 test('protocol: accepts a valid node_frame', () => {
   const r = P.parse(frame({}));
@@ -235,4 +236,25 @@ test('viewmodel: connection tab shows test result, hints and retry only when rel
 test('alerts: gateway-lost alert is raised immediately on link loss (no wait for the 1 s tick)', () => {
   const { s } = mkStore2(); const w = hw(s); w.onmessage({ data: frame({}) }); w.onclose({ code: 1006 });
   assert.ok(s.ds.hardware.alerts.some((a) => a.id === 'gw:link' && a.active && a.sev === 'Critical'));
+});
+
+test('store: duplicate and out-of-order frames do not overwrite newer values; a node restart is accepted', () => {
+  const { s } = mkStore(); s.setMode('hardware'); s.connect({ host: '10.0.0.2', port: '81' }); FakeWS.all[0].onopen(); const w = FakeWS.all[0];
+  const f = (seq, rssi) => frame({ seq, raw: { rssi, amp_var: 0.1 } });
+  w.onmessage({ data: f(100, -50) }); w.onmessage({ data: f(101, -51) });
+  w.onmessage({ data: f(101, -99) }); w.onmessage({ data: f(95, -98) });
+  assert.equal(s.ds.hardware.nodes.N2.rssi, -51, 'newer value kept'); assert.equal(s.ds.hardware.stats.dupOld, 2);
+  w.onmessage({ data: f(1, -60) }); w.onmessage({ data: f(2, -61) }); w.onmessage({ data: f(3, -62) });
+  assert.equal(s.ds.hardware.nodes.N2.rssi, -62, 'restart accepted after 3 consecutive lower seq');
+});
+test('store: invalid frames never overwrite valid readings; unknown types and bad timestamps are safe', () => {
+  const { s } = mkStore(); s.setMode('hardware'); s.connect({ host: '10.0.0.2', port: '81' }); FakeWS.all[0].onopen(); const w = FakeWS.all[0];
+  w.onmessage({ data: frame({ raw: { rssi: -54, amp_var: 0.18 } }) });
+  for (const bad of ['{"v":1,"type":"node_frame","node":"N2","raw":{"rssi":"loud"}}', '{"v":1,"type":"node_frame","node":"N2","ts":"x","raw":{"rssi":-1}}', '{"v":1,"type":"node_frame","node":"N2"}', '{"v":1,"type":"zzz"}', 'not json']) w.onmessage({ data: bad });
+  assert.equal(s.ds.hardware.nodes.N2.rssi, -54); assert.equal(s.ds.hardware.stats.malformed, 4); assert.equal(s.ds.hardware.stats.unknown, 1);
+});
+test('store: a hello with simulated:true marks the gateway as SOFTWARE SIMULATOR everywhere it is described', () => {
+  const { s } = mkStore(); s.setMode('hardware'); s.connect({ host: '10.0.0.2', port: '81' }); FakeWS.all[0].onopen();
+  FakeWS.all[0].onmessage({ data: JSON.stringify({ v: 1, type: 'hello', gateway_id: 'SIMULATOR', gateway_kind: 'software-simulator', simulated: true }) });
+  assert.equal(s.ds.hardware.hello.simulated, true); assert.match(s.exportReport(), /SOFTWARE SIMULATOR/); assert.ok(s.ds.hardware.log.some((l) => /SOFTWARE SIMULATOR hello/.test(l.text)));
 });

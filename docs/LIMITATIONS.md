@@ -12,3 +12,8 @@
 - Test Connection checks that a WebSocket opens and whether a valid frame arrives within a few seconds; it cannot tell whether the data is physically correct.
 - Settings are stored in WebView localStorage; clearing app data resets them.
 - Demo data is simulated and labelled DEMO everywhere; its estimate values are fixed scripts, not detections.
+- Observatory is a 2D-canvas perspective scene, not WebGL/Three.js. Node positions are placeholders unless the gateway sends `pos`. Presence markers are zone level; no person position, count, heart rate, respiration or pose is shown unless a future firmware provides validated values. Demo silhouettes are illustrative only.
+- Rendering performance on real Android devices has not been measured.
+- The simulator's values are scripted/random, not CSI physics. Heart rate, respiration, person count and positions are never simulated or shown; they need validated firmware output.
+- The duplicate filter treats seq values up to 7 below the last accepted one as stale; a node that restarts its counter needs 3 frames to be accepted again.
+- Simulator tested on Linux; commands for Windows are untested there.

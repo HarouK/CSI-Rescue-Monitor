@@ -9,6 +9,7 @@
 <script src="assets/csi-store.js"></script>
 <script src="assets/csi-demo.js"></script>
 <script src="assets/csi-viewmodel.js"></script>
+<script src="assets/csi-observatory.js"></script>
 <script src="assets/csi-app.js"></script>
 <script src="assets/dc-runtime.js"></script>
 </head>
@@ -86,44 +87,59 @@ button:focus-visible,input:focus-visible{outline:2px solid #25e0a1;outline-offse
 html{-webkit-text-size-adjust:100%;overflow-x:hidden}
 body{overflow-x:hidden;-webkit-tap-highlight-color:transparent}
 input::placeholder{color:#5d7388}
+body{background:#05080c}
+.nl{display:inline}.ns{display:none}
+.obs{position:relative}
+.obs-view{position:relative;height:clamp(440px,68vh,740px);border:1px solid rgba(61,232,255,.22);border-radius:16px;overflow:hidden;background:radial-gradient(ellipse at 50% 38%,#0b1d2a 0%,#060b10 55%,#04070a 100%);box-shadow:inset 0 0 70px rgba(61,232,255,.05),0 0 30px rgba(37,224,161,.05)}
+.obs-panel{background:rgba(6,12,18,.74);border:1px solid rgba(61,232,255,.22);border-radius:12px;padding:14px;box-sizing:border-box;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);box-shadow:0 0 18px rgba(61,232,255,.05)}
+.obs-k{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.16em;color:#5f8da0;font-weight:600;text-transform:uppercase}
+.obs-v{font-family:'JetBrains Mono',monospace;font-weight:600}
+@media (min-width:900px){.obs-panels{display:contents}.obs-left{position:absolute;left:16px;top:84px;width:232px}.obs-right{position:absolute;right:16px;top:84px;width:252px}}
+@media (max-width:899px){.obs-panels{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}.obs-view{height:clamp(340px,58vh,540px)}}
+@media (max-width:620px){.obs-panels{grid-template-columns:1fr}}
+@media (max-width:420px){.nl{display:none!important}.ns{display:inline!important}}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
 @media (max-width:760px){
   nav[aria-label=Main]{position:fixed!important;left:0;right:0;bottom:0;z-index:20;flex:none!important;flex-direction:row!important;gap:4px!important;border-radius:0!important;border-width:1px 0 0 0!important;padding:6px 8px calc(6px + env(safe-area-inset-bottom))!important;background:#0d151e!important}
   nav[aria-label=Main]>div{display:none!important}
-  nav[aria-label=Main]>button{flex:1 1 0!important;min-width:0;padding:8px 2px!important;font-size:12px!important;text-align:center!important;min-height:48px!important}
+  nav[aria-label=Main]>button{flex:1 1 0!important;min-width:0;padding:8px 2px!important;font-size:11px!important;text-align:center!important;min-height:48px!important}
   #dc-root>.sc-host>div{padding:calc(14px + env(safe-area-inset-top)) 14px calc(84px + env(safe-area-inset-bottom)) 14px!important}
 }
 @media (min-width:761px){#dc-root>.sc-host>div{padding-top:calc(20px + env(safe-area-inset-top))!important}}
 </style>
 </helmet>
-<div style="background:#0a1017;color:#e6eef6;font-family:'Inter',system-ui,sans-serif;min-height:100vh;box-sizing:border-box;padding:20px;display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start">
+<div style="background:transparent;color:#e6eef6;font-family:'Inter',system-ui,sans-serif;min-height:100vh;box-sizing:border-box;padding:20px;display:flex;flex-direction:column;gap:14px;max-width:1560px;margin:0 auto">
 
-<!-- Sidebar -->
-<nav aria-label="Main" style="flex:0 0 200px;min-width:0;background:#101922;border:1px solid #1e2d3b;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:6px;box-sizing:border-box">
-<div style="display:flex;flex-direction:column;gap:2px;padding:4px 6px 16px">
-<span style="font-size:16px;font-weight:700;letter-spacing:-0.01em">CSI Rescue Monitor</span>
-<span style="font-size:12px;color:#93a8bb">ESP32-S3 mesh</span>
+<!-- Top bar -->
+<header style="display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;justify-content:space-between">
+<div style="display:flex;flex-direction:column;gap:3px;min-width:0">
+<div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap">
+<span style="font-size:24px;font-weight:700;letter-spacing:-0.01em;text-shadow:0 0 18px rgba(37,224,161,.35)"><span style="color:{{accent}}">CSI</span> Rescue Monitor</span>
+<h1 style="margin:0;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#5f8da0;font-weight:600">{{pageTitle}}</h1>
 </div>
-<sc-for list="{{navs}}" as="n" hint-placeholder-count="3">
-<button sc-camel-on-click="{{n.pick}}" aria-pressed="{{n.pressed}}" style="cursor:pointer;text-align:left;background:{{n.bg}};color:{{n.fg}};border:1px solid {{n.border}};border-radius:8px;padding:11px 14px;min-height:44px;font-size:14px;font-weight:600">{{n.label}}</button>
+<span style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.2em;color:#5f8da0">WI-FI CSI SENSING OBSERVATORY · ESP32-S3 MESH</span>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:13px;color:#c4d2df">
+<span style="display:flex;align-items:center;gap:8px;border:1px solid rgba(61,232,255,.25);border-radius:999px;padding:6px 12px;background:rgba(6,12,18,.6)"><span style="width:8px;height:8px;border-radius:50%;background:{{linkColor}};box-shadow:0 0 8px {{linkColor}}"></span>{{linkText}}</span>
+<span style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;letter-spacing:0.08em;color:{{modeColor}};border:1px solid {{modeColor}};border-radius:999px;padding:6px 12px">{{modeLabel}}</span>
+<span title="Estimated occupancy: zones whose node reports a presence estimate. Not confirmed detections." style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;letter-spacing:0.06em;color:{{occColor}};border:1px solid {{occColor}};border-radius:999px;padding:6px 12px">{{occTitle}} {{occLine}}</span>
+<span style="font-family:'JetBrains Mono',monospace;color:#5f8da0;font-size:11px">{{dateText}}</span>
+<sc-if value="{{hasPower}}" hint-placeholder-val="{{true}}">
+<span style="font-family:'JetBrains Mono',monospace;font-size:12px;background:rgba(6,12,18,.6);border:1px solid #1e2d3b;border-radius:999px;padding:6px 12px">{{powerText}}</span>
+</sc-if>
+<button sc-camel-on-click="{{openSettings}}" aria-label="Settings: gateway connection" title="Settings: gateway connection" style="cursor:pointer;width:40px;height:40px;border-radius:50%;background:rgba(6,12,18,.6);color:#c4d2df;border:1px solid rgba(61,232,255,.25);font-size:18px;line-height:1;padding:0">⚙</button>
+</div>
+</header>
+
+<!-- Navigation: top tab strip on tablet/desktop, bottom bar on phones -->
+<nav aria-label="Main" style="display:flex;flex-direction:row;gap:6px;overflow-x:auto;border-bottom:1px solid rgba(61,232,255,.15);padding-bottom:8px;box-sizing:border-box">
+<sc-for list="{{navs}}" as="n" hint-placeholder-count="5">
+<button sc-camel-on-click="{{n.pick}}" aria-pressed="{{n.pressed}}" style="cursor:pointer;text-align:center;background:{{n.bg}};color:{{n.fg}};border:1px solid {{n.border}};border-radius:8px;padding:9px 16px;min-height:44px;font-size:14px;font-weight:600;white-space:nowrap"><span class="nl">{{n.label}}</span><span class="ns">{{n.short}}</span></button>
 </sc-for>
 </nav>
 
 <!-- Main -->
-<div style="flex:1 1 680px;min-width:0;display:flex;flex-direction:column;gap:18px">
-
-<div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between">
-<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-<h1 style="margin:0;font-size:22px;font-weight:700;letter-spacing:-0.01em">{{pageTitle}}</h1>
-<span style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;letter-spacing:0.08em;color:{{modeColor}};border:1px solid {{modeColor}};border-radius:4px;padding:3px 8px">{{modeLabel}}</span>
-</div>
-<div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:13px;color:#c4d2df">
-<span style="display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;border-radius:50%;background:{{linkColor}}"></span>{{linkText}}</span>
-<span style="font-family:'JetBrains Mono',monospace;color:#93a8bb">{{dateText}}</span>
-<sc-if value="{{hasPower}}" hint-placeholder-val="{{true}}">
-<span style="font-family:'JetBrains Mono',monospace;background:#101922;border:1px solid #1e2d3b;border-radius:999px;padding:6px 12px">{{powerText}}</span>
-</sc-if>
-</div>
-</div>
+<div style="flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:18px">
 
 <sc-if value="{{showBanner}}" hint-placeholder-val="{{false}}">
 <div role="status" aria-live="polite" style="background:#101922;border:1px solid {{bannerColor}};border-left-width:4px;border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:4px">
@@ -136,89 +152,80 @@ input::placeholder{color:#5d7388}
 <sc-if value="{{isDash}}" hint-placeholder-val="{{true}}">
 <div style="display:flex;flex-direction:column;gap:18px">
 
-<div style="display:flex;flex-wrap:wrap;gap:18px;align-items:stretch">
+<!-- ====== Observatory scene + floating panels ====== -->
+<section class="obs" aria-label="Observatory">
+<div class="obs-view">
+<canvas id="obs-canvas" role="img" aria-label="{{sceneAria}}" style="position:absolute;left:0;top:0;width:100%;height:100%;display:block;touch-action:pan-y"></canvas>
+<div id="obs-fallback" style="display:none;position:absolute;left:0;top:0;right:0;bottom:0;padding:70px 20px;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.6;color:#c4d2df">The 3D view is not available in this browser (canvas unsupported). Text summary: {{zoneSummary}}</div>
+<div style="position:absolute;left:16px;top:14px;display:flex;flex-direction:column;gap:4px;pointer-events:none">
+<span style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;letter-spacing:.12em;color:{{sceneTagColor}}">{{sceneTag}}</span>
+<span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#5f8da0">{{liveNote}}</span>
+</div>
+<div role="group" aria-label="Camera view" style="position:absolute;right:16px;top:12px;display:flex;gap:6px">
+<sc-for list="{{camBtns}}" as="c" hint-placeholder-count="3">
+<button sc-camel-on-click="{{c.pick}}" aria-pressed="{{c.pressed}}" style="cursor:pointer;background:rgba(6,12,18,.7);color:{{c.fg}};border:1px solid {{c.border}};border-radius:6px;padding:6px 10px;min-height:32px;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;letter-spacing:.08em">{{c.label}}</button>
+</sc-for>
+</div>
+<span style="position:absolute;right:16px;top:50px;max-width:230px;text-align:right;font-size:11px;font-style:italic;color:#5f8da0;line-height:1.4;pointer-events:none">{{sceneCaption}}</span>
+<sc-if value="{{hasSceneEmpty}}" hint-placeholder-val="{{false}}">
+<div role="status" style="position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);max-width:min(420px,70%);text-align:center;background:rgba(6,12,18,.82);border:1px solid rgba(255,180,84,.5);border-radius:10px;padding:12px 16px;font-size:13px;line-height:1.5;color:#e6eef6">{{sceneEmpty}}</div>
+</sc-if>
+<div style="position:absolute;left:0;right:0;bottom:14px;display:flex;flex-direction:column;align-items:center;gap:7px;padding:0 10px">
+<span style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;letter-spacing:.14em;color:{{occColor}};border:1px solid {{occColor}};border-radius:999px;padding:3px 10px;background:rgba(6,12,18,.8);text-align:center">{{occTitle}} · {{occLong}}</span>
+<div role="group" aria-label="Monitoring view" style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;background:rgba(6,12,18,.82);border:1px solid rgba(61,232,255,.28);border-radius:20px;padding:5px">
+<sc-for list="{{obsModes}}" as="m" hint-placeholder-count="3">
+<button sc-camel-on-click="{{m.pick}}" aria-pressed="{{m.pressed}}" title="{{m.aria}}" style="cursor:pointer;background:{{m.bg}};color:{{m.fg}};border:1px solid {{m.border}};border-radius:16px;padding:8px 14px;min-height:40px;font-size:13px;font-weight:600">{{m.label}}</button>
+</sc-for>
+</div>
+</div>
+</div>
 
-<div style="flex:2 1 540px;min-width:0;background:#101922;border:1px solid #1e2d3b;border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:12px">
-<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px">
-<div style="display:flex;flex-direction:column;gap:3px">
-<h2 style="margin:0;font-size:16px;font-weight:600">Live through-wall view</h2>
-<span style="font-size:13px;color:#93a8bb">Estimated presence signal from CSI · not a reconstruction of a person</span>
+<div class="obs-panels">
+<div class="obs-panel obs-left" style="border-color:{{vitalsEmph}}" aria-label="Vital signs">
+<div class="obs-k" style="margin-bottom:10px">Vital signs</div>
+<div style="display:flex;flex-direction:column;gap:12px">
+<div><div class="obs-k" style="color:#93a8bb">Heart rate</div><div style="display:flex;align-items:baseline;gap:6px"><span class="obs-v" style="font-size:26px;color:{{heartColor}}">{{heartText}}</span><span class="obs-k">BPM</span></div><div style="font-size:11px;color:#5f8da0">{{heartNote}}</div></div>
+<div><div class="obs-k" style="color:#93a8bb">Respiration</div><div style="display:flex;align-items:baseline;gap:6px"><span class="obs-v" style="font-size:26px;color:{{respColor}}">{{respText}}</span><span class="obs-k">RPM</span></div><div style="font-size:11px;color:#5f8da0">{{respNote}}</div></div>
+<div><div class="obs-k" style="color:#93a8bb">Breathing-band power</div><div class="obs-v" style="font-size:18px;color:#3de8ff">{{breathText}}</div><div style="font-size:11px;color:#5f8da0;line-height:1.35">{{breathNote}}</div></div>
+<div><div class="obs-k" style="color:#93a8bb">Confidence</div><div style="display:flex;align-items:baseline;gap:2px"><span class="obs-v" style="font-size:26px;color:{{accent}}">{{confText}}</span><span class="obs-k">{{confUnit}}</span></div><div style="height:4px;border-radius:2px;background:#13212c;margin:4px 0"><div style="height:4px;border-radius:2px;background:{{accent}};width:{{confBar}}"></div></div><div style="font-size:11px;color:#5f8da0;line-height:1.35">{{confNote}}</div></div>
 </div>
-<span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#93a8bb">{{liveNote}}</span>
 </div>
-<div style="display:flex;gap:12px;align-items:stretch">
-<svg sc-camel-view-box="0 0 760 440" role="img" aria-label="Three-dimensional style view of the search room behind a wall. A glowing zone marks each node that reports a presence estimate, with its estimated confidence." style="flex:1 1 auto;min-width:0;width:100%;height:auto;display:block;background:#0b121a;border-radius:10px">
-<defs>
-<radialGradient id="glowB" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="{{accent}}" stop-opacity="0.95"></stop><stop offset="45%" stop-color="{{accent}}" stop-opacity="0.35"></stop><stop offset="100%" stop-color="{{accent}}" stop-opacity="0"></stop></radialGradient>
-</defs>
-<polygon points="190,60 700,60 700,230 190,230" fill="#111b25" stroke="#3b4f61" stroke-width="1.5"></polygon>
-<polygon points="110,210 190,60 190,230 110,400" fill="#0f1822" stroke="#3b4f61" stroke-width="1.5"></polygon>
-<polygon points="110,400 190,230 700,230 650,400" fill="#0d151e" stroke="#3b4f61" stroke-width="1.5"></polygon>
-<g stroke="#1e2d3b" stroke-width="1">
-<line x1="170" y1="272" x2="688" y2="272"></line>
-<line x1="150" y1="315" x2="675" y2="315"></line>
-<line x1="130" y1="357" x2="662" y2="357"></line>
-<line x1="292" y1="230" x2="218" y2="400"></line>
-<line x1="395" y1="230" x2="326" y2="400"></line>
-<line x1="497" y1="230" x2="434" y2="400"></line>
-<line x1="600" y1="230" x2="542" y2="400"></line>
-</g>
-<rect x="600" y="85" width="86" height="140" fill="none" stroke="#4a6076" stroke-width="1.5"></rect>
-<line x1="600" y1="132" x2="686" y2="132" stroke="#4a6076"></line>
-<line x1="600" y1="178" x2="686" y2="178" stroke="#4a6076"></line>
-<polygon points="330,255 450,255 462,285 316,285" fill="#16222e" stroke="#4a6076" stroke-width="1.5"></polygon>
-<polygon points="330,285 336,330 342,330 340,285" fill="#4a6076"></polygon>
-<polygon points="440,285 446,330 452,330 458,285" fill="#4a6076"></polygon>
-<polygon points="140,320 200,300 215,335 150,360" fill="#16222e" stroke="#4a6076" stroke-width="1.5"></polygon>
-<g opacity="{{zAOn}}">
-<ellipse cx="273" cy="353" rx="64" ry="50" fill="url(#glowB)" opacity="0.7"></ellipse>
-<rect x="228" y="297" width="90" height="112" rx="3" fill="none" stroke="{{accent}}" stroke-width="1.5" stroke-dasharray="5 4"></rect>
-<rect x="228" y="275" width="90" height="22" rx="3" fill="#0a1017" stroke="{{accent}}" stroke-width="1"></rect>
-<text x="273" y="290" text-anchor="middle" fill="#e6eef6" font-size="12" font-weight="600" font-family="JetBrains Mono, monospace">Zone A</text>
-</g>
-<g opacity="{{zBOn}}">
-<ellipse cx="270" cy="300" rx="70" ry="55" fill="url(#glowB)" opacity="1"></ellipse>
-<rect x="222" y="240" width="96" height="120" rx="3" fill="none" stroke="{{accent}}" stroke-width="1.5" stroke-dasharray="5 4"></rect>
-<rect x="222" y="218" width="96" height="22" rx="3" fill="#0a1017" stroke="{{accent}}" stroke-width="1"></rect>
-<text x="270" y="233" text-anchor="middle" fill="#e6eef6" font-size="12" font-weight="600" font-family="JetBrains Mono, monospace">Zone B</text>
-</g>
-<g opacity="{{zCOn}}">
-<ellipse cx="547" cy="283" rx="64" ry="50" fill="url(#glowB)" opacity="0.7"></ellipse>
-<rect x="502" y="227" width="90" height="112" rx="3" fill="none" stroke="{{accent}}" stroke-width="1.5" stroke-dasharray="5 4"></rect>
-<rect x="502" y="205" width="90" height="22" rx="3" fill="#0a1017" stroke="{{accent}}" stroke-width="1"></rect>
-<text x="547" y="220" text-anchor="middle" fill="#e6eef6" font-size="12" font-weight="600" font-family="JetBrains Mono, monospace">Zone C</text>
-</g>
-<g opacity="{{zDOn}}">
-<ellipse cx="545" cy="318" rx="62" ry="48" fill="url(#glowB)" opacity="0.7"></ellipse>
-<rect x="500" y="262" width="90" height="112" rx="3" fill="none" stroke="{{accent}}" stroke-width="1.5" stroke-dasharray="5 4"></rect>
-<rect x="500" y="240" width="90" height="22" rx="3" fill="#0a1017" stroke="{{accent}}" stroke-width="1"></rect>
-<text x="545" y="255" text-anchor="middle" fill="#e6eef6" font-size="12" font-weight="600" font-family="JetBrains Mono, monospace">Zone D</text>
-</g>
-<text x="136" y="108" fill="#93a8bb" font-size="12" font-family="JetBrains Mono, monospace">wall / debris</text>
-<g stroke-width="2.5" fill="none">
-<line x1="60" y1="395" x2="60" y2="345" stroke="#7cb8ff"></line>
-<line x1="60" y1="395" x2="110" y2="395" stroke="#25e0a1"></line>
-</g>
-<text x="52" y="340" fill="#93a8bb" font-size="11" font-family="JetBrains Mono, monospace">Z</text>
-<text x="114" y="399" fill="#93a8bb" font-size="11" font-family="JetBrains Mono, monospace">X</text>
+
+<div class="obs-panel obs-right" style="border-color:{{signalEmph}}" aria-label="Wi-Fi signal">
+<div class="obs-k" style="margin-bottom:8px">Wi-Fi signal</div>
+<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+<sc-for list="{{nodePicks}}" as="p" hint-placeholder-count="4">
+<button sc-camel-on-click="{{p.pick}}" aria-pressed="{{p.pressed}}" style="cursor:pointer;background:{{p.bg}};color:{{p.fg}};border:1px solid {{p.border}};border-radius:6px;padding:4px 9px;min-height:32px;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600">{{p.label}}</button>
+</sc-for>
+</div>
+<div style="display:flex;flex-direction:column;gap:6px;font-size:12px">
+<div style="display:flex;justify-content:space-between"><span style="color:#93a8bb">RSSI</span><span class="obs-v" style="color:#4d8dff">{{wsRssi}}</span></div>
+<div style="display:flex;justify-content:space-between"><span style="color:#93a8bb">Variance</span><span class="obs-v" style="color:#4d8dff">{{wsVar}}</span></div>
+<div style="display:flex;justify-content:space-between"><span style="color:#93a8bb">Motion</span><span class="obs-v" style="color:#4d8dff">{{wsMotion}}</span></div>
+<div style="display:flex;justify-content:space-between;align-items:baseline"><span style="color:#93a8bb">Persons (est.)</span><span class="obs-v" style="color:#4d8dff">{{wsPersons}}</span></div>
+<div style="font-size:10px;color:#5f8da0;text-align:right">{{wsPersonsNote}}</div>
+</div>
+<svg sc-camel-view-box="0 0 200 40" preserveAspectRatio="none" role="img" aria-label="Recent CSI variance for the selected node" style="width:100%;height:44px;display:block;margin-top:8px;background:rgba(77,141,255,.06);border-radius:6px">
+<polyline points="{{sparkPoints}}" fill="none" stroke="#4d8dff" stroke-width="1.6" opacity="{{sparkOp}}" vector-effect="non-scaling-stroke"></polyline>
 </svg>
-<div style="flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:12px;color:#93a8bb">
-<span>High</span>
-<span style="display:block;width:12px;flex:1 1 auto;min-height:120px;border-radius:6px;background:linear-gradient(180deg,#25e0a1,#0b121a);border:1px solid #1e2d3b"></span>
-<span>Low</span>
+<div style="font-size:10px;color:#5f8da0;margin-top:3px">{{sparkNote}}</div>
+<div class="obs-k" style="margin:10px 0 6px">Presence</div>
+<div style="text-align:center;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;letter-spacing:.14em;color:{{wsPresenceColor}};border:1px solid {{wsPresenceColor}};border-radius:8px;padding:9px 6px">{{wsPresence}}</div>
+<div style="font-size:10px;color:#5f8da0;margin-top:5px">{{wsAge}} · estimate, unvalidated</div>
 </div>
 </div>
-<div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#c4d2df;line-height:1.5">{{zoneSummary}}</div>
-</div>
+</section>
 
-<div style="flex:1 1 300px;min-width:0;display:flex;flex-direction:column;gap:18px">
-<div style="background:#101922;border:1px solid #1e2d3b;border-radius:14px;padding:18px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center">
+<div style="display:flex;flex-wrap:wrap;gap:18px;align-items:stretch">
+<div style="flex:1 1 100%;min-width:0;display:flex;flex-wrap:wrap;gap:18px;align-items:stretch">
+<div style="flex:1 1 280px;min-width:0;background:#101922;border:1px solid #1e2d3b;border-radius:14px;padding:18px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center">
 <h2 style="margin:0;font-size:16px;font-weight:600">Flagged zones</h2>
 <div style="font-family:'JetBrains Mono',monospace;font-size:64px;font-weight:600;line-height:1.1;color:{{accent}}">{{occCount}}</div>
 <div style="font-size:14px;color:#c4d2df">{{occNames}}</div>
+<div style="font-size:13px;color:#93a8bb">{{zoneSummary}}</div>
 <div style="font-size:13px;color:#93a8bb">Presence estimates, not confirmed survival</div>
 </div>
-<div style="flex:1 1 auto;background:#101922;border:1px solid #1e2d3b;border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:6px">
+<div style="flex:2 1 360px;min-width:0;background:#101922;border:1px solid #1e2d3b;border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:6px">
 <h2 style="margin:0 0 6px;font-size:16px;font-weight:600">Mesh node status</h2>
 <sc-for list="{{meshNodes}}" as="m" hint-placeholder-count="4">
 <button sc-camel-on-click="{{m.pick}}" aria-label="{{m.aria}}" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px;background:transparent;color:#e6eef6;border:0;border-top:1px solid #1e2d3b;padding:10px 4px;min-height:44px;font-size:14px;text-align:left">
@@ -451,6 +458,7 @@ input::placeholder{color:#5d7388}
 <sc-if value="{{isLog}}" hint-placeholder-val="{{false}}">
 <div style="display:flex;flex-direction:column;gap:18px">
 
+<sc-if value="{{showAlerts}}" hint-placeholder-val="{{true}}">
 <div style="background:#101922;border:1px solid #1e2d3b;border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:12px">
 <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
 <h2 style="margin:0;font-size:16px;font-weight:600">Alerts</h2>
@@ -476,7 +484,9 @@ input::placeholder{color:#5d7388}
 </sc-if>
 </div>
 </div>
+</sc-if>
 
+<sc-if value="{{showLogs}}" hint-placeholder-val="{{true}}">
 <div style="background:#101922;border:1px solid #1e2d3b;border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:12px">
 <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
 <h2 style="margin:0;font-size:16px;font-weight:600">System log</h2>
@@ -510,7 +520,7 @@ input::placeholder{color:#5d7388}
 </sc-if>
 </div>
 </div>
-
+</sc-if>
 </div>
 </sc-if>
 
@@ -606,12 +616,12 @@ input::placeholder{color:#5d7388}
 </x-dc>
 <script type="text/x-dc" data-dc-script="" data-props="{&quot;accent&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#25e0a1&quot;,&quot;options&quot;:[&quot;#25e0a1&quot;,&quot;#7cb8ff&quot;,&quot;#ffb454&quot;]},&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:1700}}">
 class Component extends DCLogic {
-  state = { tab: 'dash', sel: 'N2', filter: 'All', sevFilter: 'All', exChart: false, exEst: false, report: '', exportNote: '', errors: {}, draft: Object.assign({}, CSI.app.store.settings.config) };
+  state = { tab: 'dash', logView: 'both', obsMode: 'presence', cam: 'orbit', sel: 'N2', filter: 'All', sevFilter: 'All', exChart: false, exEst: false, report: '', exportNote: '', errors: {}, draft: Object.assign({}, CSI.app.store.settings.config) };
 
   componentDidMount() {
     const self = this;
     this._unsub = CSI.app.store.subscribe(() => self.setState({ _r: Date.now() }));
-    window.CSI_ui = { back() { if (self.state.tab !== 'dash') { self.setState({ tab: 'dash' }); return true; } return false; } };
+    window.CSI_ui = { back() { if (self.state.tab !== 'dash') { self.setState({ tab: 'dash' }); return true; } return false; }, go(t, lv) { self.setState({ tab: t, logView: lv || 'both' }); } };
   }
   componentWillUnmount() { if (this._unsub) this._unsub(); window.CSI_ui = null; }
 
@@ -619,6 +629,9 @@ class Component extends DCLogic {
     const self = this, app = CSI.app, st = app.store;
     return {
       set: (p) => self.setState(p),
+      go: (t, lv) => self.setState({ tab: t, logView: t === 'log' ? lv : 'both' }),
+      obs: (m) => self.setState({ obsMode: m }),
+      cam: (c) => self.setState({ cam: c }),
       ack: (id) => st.ack(id),
       cut: (c) => st.setDemoCut(c),
       mode: (m) => { st.setMode(m); self.setState({ errors: {} }); },
@@ -634,6 +647,7 @@ class Component extends DCLogic {
 
   renderVals() {
     const accent = this.props.accent ?? '#25e0a1';
+    if (CSI.Observatory) CSI.Observatory.setOptions({ mode: this.state.obsMode, cam: this.state.cam, sel: this.state.sel });
     return CSI.ViewModel.build(CSI.app.store.view(), this.state, this.actions(), accent, CSI.app.store);
   }
 }

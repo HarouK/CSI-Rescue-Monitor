@@ -15,3 +15,15 @@ Wording changes for honesty: "Occupied zones" -> "Flagged zones"; "Classifier ou
 - `NativeBridge.java`: notification tap opens the app; share intent `ClipData`; stale exports cleaned.
 - Added `docs/BUILD_ANDROID.md`, `.gitignore`, `.github/workflows/android.yml` (optional cloud build, unrun). Gradle wrapper files (`gradlew`, `gradlew.bat`, `gradle/wrapper/*`) are included, pointing at Gradle 8.7; the wrapper jar was generated in the sandbox, so if Studio complains, let it regenerate it.
 - Protocol unchanged.
+
+## Round 4 (Observatory redesign)
+- New landing screen "Observatory": perspective room scene (floor grid, wave domes, link pulses, node markers, zone-level presence markers, occupancy pill), floating Vital Signs and Wi-Fi Signal panels, bottom monitoring bar (Human Presence / Vital Sign / Signal), Orbit/Top/Front camera, compact header with status, mode, occupancy and settings; tabs renamed Observatory, Analytics, Alerts, Logs, Connection.
+- New file `assets/csi-observatory.js` (canvas renderer, read-only on the store); `index.html` markup/CSS and `csi-viewmodel.js` extended; `docs/OBSERVATORY.md`.
+- No changes to the transport, protocol, store logic, Java or Gradle files. Three.js was NOT used (could not be bundled offline here); see OBSERVATORY.md.
+- Tests: 9 new browser checks for the Observatory (see TEST_REPORT).
+
+## Round 5 (gateway communication foundation; simulator)
+- New: `tools/gateway-simulator.js` (dependency-free WebSocket gateway simulator, CLI + local control panel), `tests/simulator.test.js`, `docs/GATEWAY_SIMULATOR.md`.
+- Protocol (backward compatible): `hello.simulated`, `hello.gateway_kind`; `ts` must be a number >= 0 if present; empty `node_frame` rejected; duplicate/out-of-order frames ignored (restart tolerated). See PROTOCOL.md audit table.
+- App: "SOFTWARE SIMULATOR" badge/scene label/Connection row/export wording when `simulated:true`; `stats.dupOld` counter.
+- Modified: `csi-protocol.js`, `csi-store.js`, `csi-viewmodel.js`, `tools/` (new file only; `mock-gateway.js` unchanged), `tests/unit.test.js` (fixture now increments `seq`; 3 new tests), `tests/e2e.js` (8 new simulator checks; layout now includes 1366 and 1920 px), docs. Java/Gradle/assets other than JS untouched; Observatory unchanged.

@@ -1,0 +1,50 @@
+received_at_iso,severity,category,origin,data_source,message
+2026-11-26T19:15:46.829Z,Info,Gateway,link,HARDWARE,Disconnected by user
+2026-11-26T19:15:58.138Z,Info,Gateway,link,HARDWARE,Connecting to ws://127.0.0.1:18081/csi
+2026-11-26T19:15:58.152Z,Info,Gateway,link,HARDWARE,Connected to ws://127.0.0.1:18081/csi (waiting for data)
+2026-11-26T19:15:58.153Z,Info,Gateway,gateway,HARDWARE,"Gateway hello: MOCK-GATEWAY (fw mock-0), 4 node(s) declared"
+2026-11-26T19:15:58.176Z,Critical,Detect,app,HARDWARE,Alert raised: Possible signs of life · Zone B
+2026-11-26T19:15:58.176Z,Warning,Mesh,app,HARDWARE,Alert raised: Weak signal · N3
+2026-11-26T19:15:58.176Z,Warning,Detect,app,HARDWARE,Alert raised: Weak presence estimate · Zone D
+2026-11-26T19:16:11.307Z,Warning,Gateway,app,HARDWARE,Alert raised: Gateway data stale
+2026-11-26T19:16:11.307Z,Info,Detect,app,HARDWARE,Alert cleared: Weak presence estimate · Zone D
+2026-11-26T19:16:11.307Z,Info,Mesh,app,HARDWARE,Alert cleared: Weak signal · N3
+2026-11-26T19:16:11.307Z,Info,Detect,app,HARDWARE,Alert cleared: Possible signs of life · Zone B
+2026-11-26T19:16:14.187Z,Warning,Mesh,app,HARDWARE,Alert raised: Node data stale · N2
+2026-11-26T19:16:14.187Z,Warning,Mesh,app,HARDWARE,Alert raised: Node data stale · N3
+2026-11-26T19:16:14.187Z,Warning,Mesh,app,HARDWARE,Alert raised: Node data stale · N4
+2026-11-26T19:16:14.187Z,Info,Gateway,app,HARDWARE,Alert cleared: Gateway data stale
+2026-11-26T19:16:14.187Z,Critical,Detect,app,HARDWARE,Alert raised: Possible signs of life · Zone B
+2026-11-26T19:16:14.187Z,Info,Mesh,app,HARDWARE,Alert cleared: Node data stale · N2
+2026-11-26T19:16:14.188Z,Warning,Mesh,app,HARDWARE,Alert raised: Weak signal · N3
+2026-11-26T19:16:14.188Z,Info,Mesh,app,HARDWARE,Alert cleared: Node data stale · N3
+2026-11-26T19:16:14.188Z,Warning,Detect,app,HARDWARE,Alert raised: Weak presence estimate · Zone D
+2026-11-26T19:16:14.188Z,Info,Mesh,app,HARDWARE,Alert cleared: Node data stale · N4
+2026-11-26T19:16:16.190Z,Info,Mesh,app,HARDWARE,Alert cleared: Weak signal · N3
+2026-11-26T19:16:16.545Z,Info,Gateway,link,HARDWARE,Disconnected by user
+2026-11-26T19:16:21.311Z,Warning,Mesh,app,HARDWARE,Alert raised: Node data stale · N1
+2026-11-26T19:16:21.311Z,Warning,Mesh,app,HARDWARE,Alert raised: Node data stale · N2
+2026-11-26T19:16:21.311Z,Warning,Mesh,app,HARDWARE,Alert raised: Node data stale · N4
+2026-11-26T19:16:21.311Z,Info,Detect,app,HARDWARE,Alert cleared: Weak presence estimate · Zone D
+2026-11-26T19:16:21.311Z,Info,Detect,app,HARDWARE,Alert cleared: Possible signs of life · Zone B
+2026-11-26T19:16:21.636Z,Info,Gateway,link,HARDWARE,Connecting to ws://127.0.0.1:18081/csi
+2026-11-26T19:16:21.636Z,Info,Mesh,app,HARDWARE,Alert cleared: Node data stale · N1
+2026-11-26T19:16:21.636Z,Info,Mesh,app,HARDWARE,Alert cleared: Node data stale · N4
+2026-11-26T19:16:21.636Z,Info,Mesh,app,HARDWARE,Alert cleared: Node data stale · N2
+2026-11-26T19:16:21.653Z,Info,Gateway,link,HARDWARE,Connected to ws://127.0.0.1:18081/csi (waiting for data)
+2026-11-26T19:16:21.654Z,Info,Gateway,gateway,HARDWARE,"Gateway hello: MOCK-GATEWAY (fw mock-0), 4 node(s) declared"
+2026-11-26T19:16:21.654Z,Warning,Mesh,app,HARDWARE,Alert raised: Node data stale · N1
+2026-11-26T19:16:21.654Z,Warning,Mesh,app,HARDWARE,Alert raised: Node data stale · N2
+2026-11-26T19:16:21.654Z,Warning,Mesh,app,HARDWARE,Alert raised: Node data stale · N4
+2026-11-26T19:16:21.796Z,Info,Mesh,app,HARDWARE,Alert cleared: Node data stale · N1
+2026-11-26T19:16:21.796Z,Critical,Detect,app,HARDWARE,Alert raised: Possible signs of life · Zone B
+2026-11-26T19:16:21.796Z,Info,Mesh,app,HARDWARE,Alert cleared: Node data stale · N2
+2026-11-26T19:16:21.796Z,Warning,Mesh,app,HARDWARE,Alert raised: Weak signal · N3
+2026-11-26T19:16:21.796Z,Warning,Detect,app,HARDWARE,Alert raised: Weak presence estimate · Zone D
+2026-11-26T19:16:21.796Z,Info,Mesh,app,HARDWARE,Alert cleared: Node data stale · N4
+2026-11-26T19:16:24.294Z,Warning,Gateway,link,HARDWARE,Malformed frame ignored (1 total): Invalid JSON
+2026-11-26T19:16:24.294Z,Info,Gateway,app,HARDWARE,Alert raised: 1 malformed frame(s) ignored
+2026-11-26T19:16:24.599Z,Warning,Mesh,app,HARDWARE,Alert raised: Direct link lost · N4 to base
+2026-11-26T19:16:26.601Z,Info,Mesh,app,HARDWARE,Alert cleared: Direct link lost · N4 to base
+2026-11-26T19:16:28.850Z,Warning,Mesh,gateway,HARDWARE,"comma, ""quote"" and
+newline"

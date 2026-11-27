@@ -22,10 +22,12 @@ async function waitFor(fn, ms, what) { const t = Date.now(); for (;;) { try { co
   const hook = (pg) => pg.on('pageerror', (e) => jsErrors.push(e.message)); hook(page);
   const text = () => page.evaluate(() => document.body.innerText);
   const state = (expr) => page.evaluate(expr);
-  const tab = async (n) => { await page.getByRole('button', { name: n, exact: true }).first().click(); await sleep(200); };
+  const NAVI = { Dashboard: 0, Observatory: 0, Analytics: 1, Alerts: 2, Logs: 3, Connection: 4 };
+  // 'Alerts & log' = both cards on one page (CSI_ui.go); every other name clicks the real navigation button.
+  const tab = async (n) => { if (n === 'Alerts & log') await page.evaluate(() => window.CSI_ui.go('log', 'both')); else await page.locator('nav[aria-label=Main] button').nth(NAVI[n]).click(); await sleep(200); };
   await page.goto('http://127.0.0.1:8770/index.html'); await sleep(2500);
 
-  await check('offline: loads with zero external requests (CDN/fonts blocked)', async () => { eq(external.length, 0, external.join(',')); ok((await text()).includes('Live through-wall view'), 'dashboard rendered'); });
+  await check('offline: loads with zero external requests (CDN/fonts blocked)', async () => { eq(external.length, 0, external.join(',')); ok((await text()).includes('VITAL SIGNS') || /vital signs/i.test(await text()), 'observatory rendered'); });
   await check('no uncaught JS errors on load', async () => { eq(jsErrors.length, 0, jsErrors.join(' | ')); });
   await check('demo: DEMO DATA badge, demo link text, 2 flagged zones from simulated nodes', async () => { const t = await text(); ok(t.includes('DEMO DATA') && t.includes('Demo mode · simulated'), 'badge'); ok(/Flagged zones\s*\n\s*2/.test(t), 'flagged=2'); ok(t.includes('Zone B') && t.includes('Zone D')); });
   await check('nav: all four tabs open and show their heading', async () => {
@@ -181,8 +183,108 @@ async function waitFor(fn, ms, what) { const t = Date.now(); for (;;) { try { co
   });
   await gw.stop();
 
+  // ---- observatory (3D scene, panels, monitoring controls) ----
+  const obs = () => page.evaluate(() => CSI.Observatory.debug());
+  const cur = (name) => page.getByRole('button', { name }).first();
+  await page.setViewportSize({ width: 1280, height: 860 });
+  await check('OBSERVATORY demo: scene draws on canvas, 4 nodes, DEMO silhouettes only for flagged zones, labelled illustrative', async () => {
+    await page.evaluate(() => CSI.app.store.setMode('demo')); await tab('Dashboard'); await sleep(1500);
+    const d = await obs(); ok(d.drew && d.frames > 5, 'frames ' + d.frames); eq(d.nodes.length, 4); ok(d.demo === true, 'demo flag'); eq(d.markers.length, 2); ok(d.markers.every((m) => m.kind === 'silhouette'), 'demo silhouettes');
+    const t = await text(); ok(/DEMO · simulated scene/.test(t) && /illustrative/i.test(t), 'demo/illustrative label'); ok(/Heart rate/i.test(t) && /N\/A/.test(t) && /not measured by this system/i.test(t), 'vitals unavailable, not invented');
+    ok(!/\b\d{2,3}\s*BPM\b/i.test(t), 'no numeric heart rate');
+  });
+  await check('OBSERVATORY controls: Human Presence / Vital Sign / Signal Monitoring switch the real overlay; Orbit/Top/Front camera; node picker', async () => {
+    for (const [label, mode] of [['Vital Sign Monitoring', 'vital'], ['Signal Monitoring', 'signal'], ['Human Presence', 'presence']]) { await cur(label).click(); await sleep(700); eq((await obs()).mode, mode, label); eq(await cur(label).getAttribute('aria-pressed'), 'true', label + ' pressed'); }
+    await cur('Vital Sign Monitoring').click(); await sleep(700); const v = await obs(); eq(v.markers.length, 0, 'presence markers hidden in vital view'); await cur('Human Presence').click(); await sleep(500);
+    for (const [label, c] of [['Top', 'top'], ['Front', 'front'], ['Orbit', 'orbit']]) { await cur(label).click(); await sleep(500); eq((await obs()).cam, c, label); }
+    const before = await text(); await page.getByRole('button', { name: 'N4', exact: true }).click(); await sleep(400); const after = await text(); ok(after !== before, 'panel changed'); ok(/-6\d dBm/.test(after), 'N4 own RSSI');
+  });
+  await check('OBSERVATORY drag orbits the camera without errors', async () => {
+    const box = await page.locator('#obs-canvas').boundingBox(); const s0 = (await obs()).nodes[0].screen;
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2); await page.mouse.down(); await page.mouse.move(box.x + box.width / 2 + 120, box.y + box.height / 2 + 10, { steps: 6 }); await page.mouse.up(); await sleep(500);
+    const s1 = (await obs()).nodes[0].screen; ok(Math.abs(s1.x - s0.x) > 3 || Math.abs(s1.y - s0.y) > 3, 'view moved');
+  });
+  await check('OBSERVATORY hardware (not connected): empty room only, no markers, no demo values, no invented vitals', async () => {
+    await page.evaluate(() => CSI.app.store.setMode('hardware')); await sleep(900); const d = await obs(); ok(d.nodes.every((n) => n.status !== 'online'), 'no live nodes while not connected: ' + JSON.stringify(d.nodes.map((n) => n.status))); ok(d.markers.every((m) => m.stale), 'only stale last-received markers'); ok(d.demo === false);
+    const t = await text(); ok(/not connected/i.test(t) && !/DEMO · simulated scene/.test(t) && !/Simulated/.test(t), 'honest empty state'); ok(/N\/A/.test(t), 'N/A');
+  });
+  await check('OBSERVATORY hardware live: zone-level markers from mock gateway (no silhouettes, no person positions), values per node', async () => {
+    await page.evaluate(() => CSI.app.store.setMode('hardware')); await tab('Connection'); await fillCfg('127.0.0.1', '18081'); gw = startGateway({ port: 18081, intervalMs: 400 });
+    await page.getByRole('button', { name: /^Connect$/ }).click(); await waitFor(() => state(() => CSI.app.store.view().link.state === 'receiving'), 25000, 'receiving'); await tab('Dashboard'); await sleep(1500);
+    const d = await obs(); eq(d.demo, false); eq(d.nodes.length, 4); ok(d.markers.length === 2 && d.markers.every((m) => m.kind !== 'silhouette'), 'markers are zone-level: ' + JSON.stringify(d.markers.map((m) => m.kind)));
+    const t = await text(); ok(/HARDWARE · zone-level estimates/.test(t) && /the gateway sends no person positions/i.test(t), 'honest caption'); ok(/Persons \(est\.\)\s*\n?\s*N\/A/.test(t), 'persons not invented'); ok(!/DEMO/.test(t.replace(/Demo Mode|DEMO\b-?/g, '')) || !/DEMO DATA/.test(t), 'no demo badge');
+    await page.getByRole('button', { name: 'N3', exact: true }).click(); await sleep(400); ok(/-73 dBm/.test(await text()), 'N3 RSSI from mock gateway'); await page.getByRole('button', { name: 'N2', exact: true }).click(); await sleep(300);
+  });
+  await check('OBSERVATORY stale: frames stop -> scene says last received, nodes marked stale, no demo fallback; resumes when data returns', async () => {
+    gw.pauseFrames(); await waitFor(async () => (await obs()).link === 'stale', 15000, 'stale link'); const d = await obs(); eq(d.demo, false); ok(d.nodes.every((n) => n.status === 'stale' || n.status === 'offline'), 'nodes stale: ' + JSON.stringify(d.nodes.map((n) => n.status)));
+    await waitFor(async () => { const t = await text(); return /DATA STALE/.test(t) && /last received, not live/i.test(t); }, 5000, 'stale text');
+    gw.resumeFrames(); await waitFor(async () => (await obs()).link === 'receiving', 15000, 'receiving again');
+  });
+  await check('OBSERVATORY connection loss: scene shows no live nodes, then recovers', async () => {
+    await gw.stop(); await waitFor(async () => /LINK LOST/.test(await text()), 15000, 'lost'); ok((await obs()).demo === false); gw = startGateway({ port: 18081, intervalMs: 400 });
+    await waitFor(() => state(() => CSI.app.store.view().link.state === 'receiving'), 25000, 'recovered'); await sleep(800); ok((await obs()).nodes.some((n) => n.status === 'online'), 'online again');
+  });
+  await check('OBSERVATORY fallback: canvas unavailable -> text summary shown, app still works, no JS errors', async () => {
+    const pg = await ctx.newPage(); const errs = []; pg.on('pageerror', (e) => errs.push(e.message)); await pg.addInitScript(() => { HTMLCanvasElement.prototype.getContext = () => null; });
+    await pg.goto('http://127.0.0.1:8770/index.html'); await sleep(2000); const vis = await pg.evaluate(() => { const f = document.getElementById('obs-fallback'); return f && getComputedStyle(f).display !== 'none' && /Text summary/.test(f.innerText); }); ok(vis, 'fallback visible'); eq(errs.length, 0, errs.join('|'));
+    await pg.locator('nav[aria-label=Main] button').nth(1).click(); await sleep(300); ok(/Estimator output/.test(await pg.evaluate(() => document.body.innerText)), 'other tabs work'); await pg.close();
+  });
+  await check('OBSERVATORY navigation: Observatory/Analytics/Alerts/Logs/Connection each open their own section', async () => {
+    for (const [i, h] of [[0, 'Mesh node status'], [1, 'Estimator output'], [2, 'Alerts'], [3, 'System log'], [4, 'Data source']]) { await page.locator('nav[aria-label=Main] button').nth(i).click(); await sleep(250); ok((await text()).includes(h), i + ' -> ' + h); }
+    await tab('Dashboard');
+  });
+  await gw.stop(); await page.evaluate(() => CSI.app.store.setMode('demo'));
+
+  // ---- software gateway simulator (tools/gateway-simulator.js) against the real UI ----
+  const { startSimulator } = require('../tools/gateway-simulator.js');
+  let sim = null; const nodesNow = () => state(() => CSI.app.store.view().nodes.map((n) => ({ id: n.id, status: n.status, rssi: n.rssi })));
+  await check('SIMULATOR connect: Hardware Mode connects to /csi, hello received, header says SOFTWARE SIMULATOR, four nodes online', async () => {
+    sim = await startSimulator({ wsPort: 18083, uiPort: 18084, intervalMs: 300, heartbeatMs: 700, quiet: true, host: '127.0.0.1' });
+    await page.evaluate(() => { CSI.app.store.setMode('hardware'); CSI.app.store.disconnect(); }); await sleep(400); await tab('Connection'); await fillCfg('127.0.0.1', '18083'); await page.getByRole('button', { name: /^Connect$/ }).click();
+    await waitFor(() => state(() => CSI.app.store.view().link.state === 'receiving'), 20000, 'receiving'); await sleep(1500);
+    const t = await text(); ok(/SOFTWARE SIMULATOR/.test(t), 'simulator label'); ok(!/DEMO DATA/.test(t), 'not demo'); const n = await nodesNow(); eq(n.length, 4); ok(n.every((x) => x.status === 'online'), JSON.stringify(n));
+    ok(await state(() => CSI.app.store.ds.hardware.hello.simulated === true), 'hello.simulated');
+    await tab('Dashboard'); await sleep(500); const t2 = await text(); ok(/SOFTWARE SIMULATOR · simulated values, not physical measurements/.test(t2), 'scene tag'); const d = await obs(); ok(d.markers.every((m) => m.kind !== 'silhouette'), 'no silhouettes in hardware mode');
+  });
+  await check('SIMULATOR controls: RSSI and CSI variance changes appear in the app; presence estimate toggles; values stay labelled estimates', async () => {
+    sim.cmd('rssi', 'N1', -82); sim.cmd('variance', 'N1', 0.45); sim.cmd('present', 'N1', '1', 0.9); await waitFor(async () => (await nodesNow()).find((n) => n.id === 'N1').rssi <= -79, 8000, 'rssi in app');
+    await page.getByRole('button', { name: 'N1', exact: true }).click(); await sleep(500); const t = await text(); ok(/-8\d dBm/.test(t), 'N1 rssi shown'); ok(/estimate/i.test(t) && !/confirmed (human|detection)/i.test(t.replace(/not confirmed/gi, '')), 'estimate wording');
+    await tab('Alerts & log'); await waitFor(async () => /Possible signs of life · Zone A/i.test(await text()), 6000, 'N1 estimate alert'); sim.cmd('present', 'N1', '0'); await tab('Dashboard');
+  });
+  await check('SIMULATOR node failures: silent node goes stale then offline; announced disconnect is offline at once; restore recovers', async () => {
+    sim.cmd('disconnect', 'N3'); await waitFor(async () => (await nodesNow()).find((n) => n.id === 'N3').status === 'offline', 6000, 'N3 offline'); ok((await nodesNow()).filter((n) => n.id !== 'N3').every((n) => n.status === 'online'), 'others online');
+    await tab('Alerts & log'); await waitFor(async () => /disconnected · N3/i.test(await text()), 6000, 'disconnect alert');
+    sim.cmd('restore', 'N3'); await waitFor(async () => (await nodesNow()).find((n) => n.id === 'N3').status === 'online', 6000, 'N3 back');
+    sim.cmd('stopnode', 'N4'); await waitFor(async () => ['stale', 'offline'].includes((await nodesNow()).find((n) => n.id === 'N4').status), 20000, 'N4 stale'); sim.cmd('restore', 'N4'); await waitFor(async () => (await nodesNow()).find((n) => n.id === 'N4').status === 'online', 8000, 'N4 back'); await tab('Dashboard');
+  });
+  await check('SIMULATOR malformed + unknown + duplicate messages: counted, logged, UI keeps working, valid values not overwritten', async () => {
+    const before = await state(() => CSI.app.store.ds.hardware.stats.malformed); const rssiBefore = (await nodesNow()).find((n) => n.id === 'N2').rssi;
+    sim.cmd('malformed', 'all'); sim.cmd('unknown'); sim.cmd('duplicate', 'N2'); await sleep(900);
+    const st = await state(() => CSI.app.store.ds.hardware.stats); ok(st.malformed >= before + 12, 'malformed ' + before + ' -> ' + st.malformed); ok(st.unknown >= 1, 'unknown counted'); ok(st.dupOld >= 1, 'duplicate ignored');
+    ok((await nodesNow()).find((n) => n.id === 'N2').rssi > -70, 'N2 not overwritten by -99 duplicate: ' + (await nodesNow()).find((n) => n.id === 'N2').rssi); ok(rssiBefore !== undefined);
+    await tab('Connection'); ok(/malformed/i.test(await text()), 'malformed count shown'); await tab('Dashboard'); eq(await state(() => CSI.app.store.view().link.state), 'receiving');
+  });
+  await check('SIMULATOR stale gateway: stop keeps socket open but silent -> DATA STALE, last values kept, never demo; start resumes', async () => {
+    sim.cmd('heartbeat', 'off'); sim.cmd('stop'); await waitFor(async () => /DATA STALE/.test(await text()), 15000, 'stale banner'); const n = await nodesNow(); ok(n.every((x) => x.rssi !== null), 'last values kept'); ok((await obs()).demo === false);
+    sim.cmd('start'); sim.cmd('heartbeat', 'on'); await waitFor(() => state(() => CSI.app.store.view().link.state === 'receiving'), 15000, 'receiving again');
+  });
+  await check('SIMULATOR gateway interruption: LINK LOST + reconnecting while refused; auto-reconnect after restore', async () => {
+    sim.cmd('interrupt'); await waitFor(async () => /LINK LOST/.test(await text()), 15000, 'lost banner'); await sleep(2500); ok(/reconnect/i.test(await text()), 'reconnecting feedback'); eq((await obs()).demo, false);
+    sim.cmd('restoregateway'); await waitFor(() => state(() => CSI.app.store.view().link.state === 'receiving'), 30000, 'auto reconnect'); ok((await nodesNow()).every((n) => n.status === 'online' || n.status === 'stale'), 'nodes back');
+  });
+  await check('SIMULATOR isolation: Demo Mode shows no simulator label or simulator values; back to Hardware keeps its own data', async () => {
+    const hwFrames = await state(() => CSI.app.store.ds.hardware.stats.rx); await page.evaluate(() => CSI.app.store.setMode('demo')); await sleep(1200); const t = await text();
+    ok(/DEMO DATA/.test(t) && !/SOFTWARE SIMULATOR/.test(t.replace(/DEMO · simulated scene/g, '')), 'demo labels only'); ok(await state(() => CSI.app.store.ds.demo.hello.gatewayId === 'DEMO-SIMULATOR'), 'demo own hello');
+    ok((await state(() => CSI.app.store.ds.hardware.stats.rx)) >= hwFrames, 'hardware dataset kept'); await page.evaluate(() => CSI.app.store.setMode('hardware')); await sleep(600); ok(/SOFTWARE SIMULATOR/.test(await text()), 'back in simulator hardware mode');
+  });
+  await check('SIMULATOR control panel page and API respond (local control UI)', async () => {
+    const pg = await ctx.newPage(); await pg.goto('http://127.0.0.1:18084/'); await sleep(1800); const t = await pg.evaluate(() => document.body.innerText); ok(/SIMULATED DATA/.test(t) && /Start simulator/.test(t) && /N4/.test(t), 'panel'); await pg.getByRole('button', { name: 'Interrupt gateway' }).click(); await sleep(400); ok(sim.state().gatewayUp === false, 'button works'); await pg.getByRole('button', { name: 'Restore gateway' }).click(); await sleep(300); ok(sim.state().gatewayUp === true); await pg.close();
+    await page.evaluate(() => CSI.app.store.disconnect && CSI.app.store.disconnect());
+  });
+  await sim.stop(); await page.evaluate(() => CSI.app.store.setMode('demo'));
+
   // ---- layout: overflow at many sizes, every tab, both modes ----
-  const sizes = [[320, 640], [360, 740], [412, 915], [600, 960], [768, 1024], [1024, 768], [1280, 900]];
+  const sizes = [[320, 640], [360, 740], [412, 915], [600, 960], [768, 1024], [1024, 768], [1280, 900], [1366, 768], [1920, 1080]];
   const overflow = [];
   for (const mode of ['demo', 'hardware']) {
     await page.evaluate((m) => CSI.app.store.setMode(m), mode);
@@ -198,7 +300,7 @@ async function waitFor(fn, ms, what) { const t = Date.now(); for (;;) { try { co
       }
     }
   }
-  await check('layout: no horizontal overflow on 4 tabs x 7 sizes x 2 modes', async () => { eq(overflow.length, 0, overflow.slice(0, 5).join(' ; ')); return '56 combinations'; });
+  await check('layout: no horizontal overflow on 4 tabs x 9 sizes x 2 modes', async () => { eq(overflow.length, 0, overflow.slice(0, 5).join(' ; ')); return '72 combinations'; });
   await check('rotation: portrait <-> landscape re-flows without errors or state loss', async () => {
     await page.evaluate(() => CSI.app.store.setMode('demo')); await page.setViewportSize({ width: 412, height: 860 }); await tab('Analytics'); await page.getByRole('button', { name: 'N3', exact: true }).click(); await page.setViewportSize({ width: 860, height: 412 }); await sleep(400); await page.setViewportSize({ width: 412, height: 860 }); await sleep(400);
     ok((await text()).includes('CSI variance · N3'), 'selection kept'); eq(jsErrors.length, 0, jsErrors.join('|'));

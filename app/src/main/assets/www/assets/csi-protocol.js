@@ -63,14 +63,22 @@
       if (o.nodes.length > 32) throw 'hello.nodes too long';
       o.nodes.forEach(function (n) {
         if (!n || typeof n !== 'object') throw 'hello.nodes entry invalid';
-        nodes.push({ id: nodeId(n.id), zone: str(n.zone, 60), material: str(n.material, 40) });
+        nodes.push({ id: nodeId(n.id), zone: str(n.zone, 60), material: str(n.material, 40), pos: pos2(n.pos, 'hello.nodes[].pos') });
       });
     }
     return {
       type: 'hello', gatewayId: str(o.gateway_id, 40), fw: str(o.fw, 40), nodes: nodes,
+      simulated: o.simulated === true, kind: str(o.gateway_kind, 24),
       threshold: optNum(o, 'threshold', 0, 1e6, 'threshold'),
       staleMs: optNum(o, 'stale_ms', 500, 600000, 'stale_ms')
     };
+  }
+
+  // optional normalised room coordinate {x,y}, each 0..1 (0,0 = near-left corner of the room)
+  function pos2(p, label) {
+    if (p === undefined || p === null) return null;
+    if (typeof p !== 'object' || !isNum(p.x) || !isNum(p.y) || p.x < 0 || p.x > 1 || p.y < 0 || p.y > 1) throw label + ' must be {x,y} numbers between 0 and 1';
+    return { x: p.x, y: p.y };
   }
 
   function nodeFrame(o) {
@@ -79,15 +87,20 @@
     var m = {
       type: 'node_frame', node: nodeId(o.node),
       seq: isNum(o.seq) && o.seq >= 0 && Math.floor(o.seq) === o.seq ? o.seq : null,
-      deviceTs: isNum(o.ts) ? o.ts : null,
+      deviceTs: optNum(o, 'ts', 0, 1e15, 'ts'),
       rssi: optNum(raw, 'rssi', -127, 0, 'raw.rssi'),
       ampVar: optNum(raw, 'amp_var', 0, 1e9, 'raw.amp_var'),
       pktRate: optNum(raw, 'pkt_rate', 0, 10000, 'raw.pkt_rate'),
       battPct: optNum(o, 'batt_pct', 0, 100, 'batt_pct'),
       breathDb: optNum(proc, 'breath_band_db', -200, 200, 'processed.breath_band_db'),
       motion: optNum(proc, 'motion_idx', 0, 1e6, 'processed.motion_idx'),
-      route: null, est: null
+      route: null, est: null, vitals: null
     };
+    if (o.vitals !== undefined && o.vitals !== null) {
+      var vt = o.vitals;
+      if (typeof vt !== 'object') throw 'vitals must be an object';
+      m.vitals = { respRpm: optNum(vt, 'resp_rpm', 0, 120, 'vitals.resp_rpm'), heartBpm: optNum(vt, 'heart_bpm', 0, 300, 'vitals.heart_bpm'), validated: vt.validated === true };
+    }
     if (o.route !== undefined && o.route !== null) {
       var r = o.route;
       if (typeof r !== 'object' || !isNum(r.hops) || r.hops < 1 || r.hops > 16) throw 'route.hops invalid';
@@ -96,8 +109,12 @@
     if (est !== undefined && est !== null) {
       if (typeof est !== 'object' || typeof est.present !== 'boolean') throw 'estimate.present must be boolean';
       var c = optNum(est, 'confidence', 0, 1, 'estimate.confidence');
-      m.est = { present: est.present, conf: c === undefined ? null : c, algo: str(est.algorithm, 40), validated: est.validated === true };
+      var cnt = optNum(est, 'count', 0, 64, 'estimate.count');
+      if (cnt !== undefined && Math.floor(cnt) !== cnt) throw 'estimate.count must be an integer';
+      m.est = { present: est.present, conf: c === undefined ? null : c, algo: str(est.algorithm, 40), validated: est.validated === true,
+        count: cnt === undefined ? null : cnt, pos: pos2(est.position, 'estimate.position') };
     }
+    if (m.rssi === undefined && m.ampVar === undefined && m.pktRate === undefined && m.breathDb === undefined && m.motion === undefined && !m.est && !m.vitals && m.battPct === undefined) throw 'node_frame carries no measurements';
     return m;
   }
 

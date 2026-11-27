@@ -50,3 +50,23 @@ Unit (31/31) and browser end-to-end (41/41) suites from round 2 were re-run afte
 
 ## Test on the phone (checklist for you)
 Install the APK, then: app opens offline (airplane mode) with the design intact; four tabs; Back from Analytics returns to Dashboard, Back on Dashboard exits; rotate; Demo mode shows DEMO badge; Alerts > Export log (CSV) opens the share sheet and the file opens as a table; deny/allow notification prompt; Connection > mock gateway on a PC (LAN IP) > Test connection, Connect, kill gateway, watch reconnect; restart the app and confirm the address persists. Report any FAIL with a screenshot or `adb logcat -s CSIMonitor`.
+
+
+# Round 4: Observatory redesign
+Performed in the sandbox with headless desktop Chromium (NOT Android WebView): unit tests **31/31**; browser end-to-end **50/50** (41 existing + 9 new Observatory checks: demo scene and labels, no invented vitals, three monitoring buttons switch the overlay, camera presets, drag-orbit, node picker with per-node values, hardware not-connected empty state, hardware live with mock gateway (zone-level markers only, persons N/A), stale state, connection loss and recovery, canvas-unavailable fallback, navigation of all five sections). Also in that run: 0 JavaScript errors, 0 external requests, no horizontal overflow across 4 tabs x 7 widths (320-1280) x 2 modes.
+Screenshots reviewed by eye: `tests/screenshots/observatory-*.png` (demo desktop/phone, hardware live, hardware stale, vital overlay).
+NOT tested: Android WebView rendering and frame rate on a real phone (canvas performance), APK build, ESP32 hardware. No claim of Android compatibility is made.
+
+
+# Round 5: gateway simulator and protocol hardening
+Environment: Linux sandbox, Node 22, headless desktop Chromium (not Android WebView), simulator on localhost. No ESP32, no Android device.
+| Area | Result |
+|---|---|
+| `node --test tests/unit.test.js` | **34/34 PASS** (31 earlier + duplicate/out-of-order, invalid-never-overwrites, simulator flag) |
+| `node --test tests/simulator.test.js` | **9/9 PASS** (handshake + simulator identification, four nodes valid per the app's parser, controls, node stop/disconnect/restore, stop/start, interrupt/restore refuses connections, all malformed kinds rejected + unknown type tolerated, control-panel API, protocol hardening) |
+| `node tests/e2e.js` | **58/58 PASS**, run twice (50 earlier + 8 new simulator checks: connect + badge + four nodes, controls reflected in UI, node failures, malformed/unknown/duplicate, stale gateway, interruption + auto-reconnect, Demo isolation, control panel page) |
+| Layout | no horizontal overflow on 4 tabs x 9 widths (320, 360, 412, 600, 768, 1024, 1280, 1366, 1920) x 2 modes = 72 combinations; 0 JS errors; 0 external requests |
+| Simulator CLI | started from the command line, accepted `status`, `rssi`, an invalid malformed kind and `quit` (manual run) |
+| Screenshot review | `SOFTWARE SIMULATOR` badge and scene label visible at 1366 px (see `tests/screenshots/simulator-live-1366.png`) |
+Requested test list: connection, handshake, four nodes, node disconnect, gateway disconnect, reconnect, stale, valid CSI messages, missing fields, malformed JSON, unknown types, invalid numbers, Demo isolation, Hardware isolation, simulator identification: all covered by the three suites above.
+NOT tested: real ESP32 firmware or radio; Android WebView/APK (not built); real Wi-Fi between a phone and a PC; Windows PowerShell execution of the commands (written for Windows, run here on Linux). **Passing these tests proves the app handles the protocol, not that hardware is compatible.**
